@@ -11,7 +11,7 @@ import beman.sendosio;
 
 #else
 
-    #include <beman/sendosio/todo.hpp>
+    #include <beman/sendosio/detail/buffers.hpp>
 
 #endif // BEMAN_SENDOSIO_USE_MODULES() &&
        // !defined(BEMAN_SENDOSIO_INCLUDED_FROM_INTERFACE_UNIT)
