@@ -1,8 +1,8 @@
 {
-  "name": "beman-exemplar",
+  "name": "beman-sendosio",
   "version-semver": "@VERSION@",
-  "description": "A Beman Library Exemplar",
-  "homepage": "https://github.com/bemanproject/exemplar",
+  "description": "An experiment in \"porting\" Capy + Corosio to senders",
+  "homepage": "https://github.com/bemanproject/sendosio",
   "license": "Apache-2.0 WITH LLVM-exception",
   "dependencies": [
     {
@@ -16,7 +16,7 @@
   ],
   "features": {
     "modules": {
-      "description": "Provide beman.exemplar as a C++ module"
+      "description": "Provide beman.sendosio as a C++ module"
     }
   }
 }
