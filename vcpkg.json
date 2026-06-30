@@ -1,9 +1,9 @@
 {
-  "name": "beman-exemplar",
-  "version-semver": "2.4.1",
+  "name": "beman-sendosio",
+  "version-semver": "0.1.0",
   "dependencies": [
     {
-      "name": "gtest",
+      "name": "catch2",
       "host": true
     }
   ]
