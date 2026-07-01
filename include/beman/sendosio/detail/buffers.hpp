@@ -22,8 +22,11 @@ namespace beman::sendosio {
 struct mutable_buffer {
     constexpr mutable_buffer() noexcept = default;
 
-    constexpr mutable_buffer(void* data, std::size_t size) noexcept
-        : buffer_(static_cast<std::byte*>(data), size) {}
+    mutable_buffer(void* data, std::size_t size) noexcept
+        : mutable_buffer(static_cast<char*>(data), size) {}
+
+    constexpr mutable_buffer(char* data, std::size_t size) noexcept
+        : buffer_(data, size) {}
 
     constexpr void* data() const noexcept { return buffer_.data(); }
 
@@ -36,14 +39,17 @@ struct mutable_buffer {
     }
 
   private:
-    std::span<std::byte> buffer_;
+    std::span<char> buffer_;
 };
 
 struct const_buffer {
     constexpr const_buffer() noexcept = default;
 
-    constexpr const_buffer(const void* data, std::size_t size) noexcept
-        : buffer_(static_cast<const std::byte*>(data), size) {}
+    const_buffer(const void* data, std::size_t size) noexcept
+        : const_buffer(static_cast<const char*>(data), size) {}
+
+    constexpr const_buffer(const char* data, std::size_t size) noexcept
+        : buffer_(data, size) {}
 
     constexpr explicit(false) const_buffer(const mutable_buffer& other) noexcept
         : const_buffer(other.data(), other.size()) {}
@@ -59,7 +65,7 @@ struct const_buffer {
     }
 
   private:
-    std::span<const std::byte> buffer_;
+    std::span<const char> buffer_;
 };
 
 namespace detail {
@@ -83,20 +89,13 @@ namespace detail {
 template <auto CPO>
 struct begin_end_t {
     template <std::convertible_to<const_buffer> Buffer>
-    constexpr auto operator()(const Buffer& buffer) const noexcept {
-        return (*this)(std::span<const Buffer, 1>(std::addressof(buffer)));
-    }
-
-    // TODO: is this overload necessary? I wonder if the compiler can deduce Buffers as a
-    //       const T for some type T
-    template <const_buffer_sequence Buffers>
-        requires(!std::convertible_to<Buffers, const_buffer>)
-    constexpr auto operator()(const Buffers& buffers) const noexcept {
-        return CPO(buffers);
+    constexpr auto operator()(Buffer& buffer) const noexcept {
+        std::span<Buffer, 1> span(std::addressof(buffer), 1);
+        return (*this)(span);
     }
 
     template <const_buffer_sequence Buffers>
-        requires(!std::convertible_to<Buffers, const_buffer>)
+        requires(!std::convertible_to<Buffers&, const_buffer>)
     constexpr auto operator()(Buffers& buffers) const noexcept {
         return CPO(buffers);
     }
@@ -111,10 +110,11 @@ inline constexpr detail::begin_end_t<std::ranges::end> end{};
 struct buffer_size_t {
     template <const_buffer_sequence Buffers>
     constexpr std::size_t operator()(const Buffers& buffers) const noexcept {
-        return std::ranges::fold_left(
-            buffers | std::ranges::views::transform(std::ranges::size),
-            std::size_t(0),
-            std::plus<>{});
+        using namespace std::ranges;
+
+        auto range = subrange(sendosio::begin(buffers), sendosio::end(buffers));
+
+        return fold_left(range | views::transform(size), std::size_t(0), std::plus<>{});
     }
 };
 
@@ -123,8 +123,12 @@ inline constexpr buffer_size_t buffer_size{};
 struct buffer_empty_t {
     template <const_buffer_sequence Buffers>
     constexpr bool operator()(const Buffers& buffers) const noexcept {
-        return buffers | std::ranges::views::transform(std::ranges::size) |
-               std::ranges::none_of([](auto size) noexcept { return size > 0; });
+        using namespace std::ranges;
+
+        auto range = subrange(sendosio::begin(buffers), sendosio::end(buffers));
+
+        return none_of(range | views::transform(size),
+                       [](auto size) noexcept { return size > 0; });
     }
 };
 
@@ -133,7 +137,11 @@ inline constexpr buffer_empty_t buffer_empty{};
 struct buffer_length_t {
     template <const_buffer_sequence Buffers>
     constexpr auto operator()(const Buffers& buffers) const noexcept {
-        return std::ranges::distance(buffers);
+        using namespace std::ranges;
+
+        auto range = subrange(sendosio::begin(buffers), sendosio::end(buffers));
+
+        return distance(range);
     }
 };
 
