@@ -28,17 +28,24 @@ struct mutable_buffer {
     constexpr mutable_buffer(char* data, std::size_t size) noexcept
         : buffer_(data, size) {}
 
+    mutable_buffer(std::nullptr_t, std::size_t) = delete; // use the default ctor
+
     constexpr void* data() const noexcept { return buffer_.data(); }
 
     constexpr std::size_t size() const noexcept { return buffer_.size(); }
 
+    constexpr friend bool operator==(mutable_buffer lhs, mutable_buffer rhs) noexcept {
+        return lhs.data() == rhs.data() && lhs.size() == rhs.size();
+    }
+
     constexpr mutable_buffer& operator+=(std::size_t n) noexcept {
-        n       = std::min(n, size());
-        buffer_ = buffer_.last(size() - n);
+        buffer_ = buffer_.last(size() - (std::min)(n, size()));
         return *this;
     }
 
   private:
+    friend struct const_buffer;
+
     std::span<char> buffer_;
 };
 
@@ -51,16 +58,21 @@ struct const_buffer {
     constexpr const_buffer(const char* data, std::size_t size) noexcept
         : buffer_(data, size) {}
 
+    const_buffer(std::nullptr_t, std::size_t) = delete; // use the default ctor
+
     constexpr explicit(false) const_buffer(const mutable_buffer& other) noexcept
-        : const_buffer(other.data(), other.size()) {}
+        : const_buffer(other.buffer_.data(), other.size()) {}
 
     constexpr const void* data() const noexcept { return buffer_.data(); }
 
     constexpr std::size_t size() const noexcept { return buffer_.size(); }
 
+    constexpr friend bool operator==(const_buffer lhs, const_buffer rhs) noexcept {
+        return lhs.data() == rhs.data() && lhs.size() == rhs.size();
+    }
+
     constexpr const_buffer& operator+=(std::size_t n) noexcept {
-        n       = (std::min)(n, size());
-        buffer_ = buffer_.last(size() - n);
+        buffer_ = buffer_.last(size() - (std::min)(n, size()));
         return *this;
     }
 
