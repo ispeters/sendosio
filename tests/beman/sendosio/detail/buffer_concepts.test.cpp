@@ -11,7 +11,7 @@ namespace {
 namespace sendosio = beman::sendosio;
 
 TEST_CASE(
-    "(an array of) const_buffer and mutable_buffer both satisify const_buffer_sequence",
+    "(an array of) const_buffer and mutable_buffer both satisfy const_buffer_sequence",
     "[sendosio::buffers]") {
     STATIC_REQUIRE(sendosio::const_buffer_sequence<sendosio::const_buffer>);
     STATIC_REQUIRE(sendosio::const_buffer_sequence<sendosio::mutable_buffer>);

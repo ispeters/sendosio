@@ -5,19 +5,19 @@
 
 #include <beman/sendosio/config.hpp>
 
+#include <beman/sendosio/detail/contracts.hpp>
+
+#include <algorithm>
+#include <concepts>
+#include <cstddef>
+#include <ranges>
+#include <span>
+
 #if BEMAN_SENDOSIO_USE_MODULES() && !defined(BEMAN_SENDOSIO_INCLUDED_FROM_INTERFACE_UNIT)
 
 import beman.sendosio;
 
 #else
-
-    #include <beman/sendosio/detail/contracts.hpp>
-
-    #include <algorithm>
-    #include <concepts>
-    #include <cstddef>
-    #include <ranges>
-    #include <span>
 
 namespace beman::sendosio {
 
