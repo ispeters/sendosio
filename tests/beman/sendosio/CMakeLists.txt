@@ -3,7 +3,13 @@
 find_package(Catch2 3 REQUIRED)
 
 add_executable(beman.sendosio.tests.detail.buffers)
-target_sources(beman.sendosio.tests.detail.buffers PRIVATE detail/buffers.test.cpp)
+target_sources(
+    beman.sendosio.tests.detail.buffers
+    PRIVATE
+        detail/buffers.test.cpp
+        detail/buffer_algorithms.test.cpp
+        detail/buffer_concepts.test.cpp
+)
 target_link_libraries(
     beman.sendosio.tests.detail.buffers
     PRIVATE beman::sendosio Catch2::Catch2WithMain
