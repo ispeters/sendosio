@@ -21,67 +21,76 @@ import beman.sendosio;
 
 namespace beman::sendosio {
 
-struct mutable_buffer {
-    constexpr mutable_buffer() noexcept = default;
+template <bool Const>
+class basic_buffer {
+  protected:
+    using value_type = std::conditional_t<Const, const char, char>;
+    using void_type  = std::conditional_t<Const, const void, void>;
 
-    mutable_buffer(void* data, std::size_t size) noexcept
-        : mutable_buffer(static_cast<char*>(data), size) {}
+    using pointer      = value_type*;
+    using void_pointer = void_type*;
 
-    constexpr mutable_buffer(char* data, std::size_t size) noexcept
+    std::span<value_type> buffer_;
+
+  public:
+    constexpr basic_buffer() noexcept = default;
+
+    basic_buffer(void_pointer data, std::size_t size) noexcept
+        : basic_buffer(static_cast<pointer*>(data), size) {}
+
+    constexpr basic_buffer(pointer data, std::size_t size) noexcept
         BEMAN_SENDOSIO_PRE(data || (size == 0))
         : buffer_(data, size) {}
 
-    mutable_buffer(std::nullptr_t, std::size_t) = delete; // use the default ctor
+    basic_buffer(std::nullptr_t, std::size_t) = delete; // use the default ctor
 
-    constexpr void* data() const noexcept { return buffer_.data(); }
+    constexpr void_pointer data() const noexcept { return buffer_.data(); }
 
     constexpr std::size_t size() const noexcept { return buffer_.size(); }
 
-    constexpr friend bool operator==(mutable_buffer lhs, mutable_buffer rhs) noexcept {
+    template <class Self, std::convertible_to<Self> Other>
+    constexpr bool operator==(this Self lhs, Other rhs) noexcept {
         return lhs.data() == rhs.data() && lhs.size() == rhs.size();
     }
 
-    constexpr mutable_buffer& operator+=(std::size_t n) noexcept {
-        buffer_ = buffer_.last(size() - (std::min)(n, size()));
-        return *this;
+    template <class Self>
+    constexpr Self& operator+=(this Self& self, std::size_t n) noexcept {
+        self.buffer_ = self.buffer_.last(self.size() - (std::min)(n, self.size()));
+        return self;
     }
-
-  private:
-    friend struct const_buffer;
-
-    std::span<char> buffer_;
 };
 
-struct const_buffer {
-    constexpr const_buffer() noexcept = default;
+struct const_buffer : private basic_buffer<true> {
+    using base = basic_buffer<true>;
 
-    const_buffer(const void* data, std::size_t size) noexcept
-        : const_buffer(static_cast<const char*>(data), size) {}
+    friend base;
 
-    constexpr const_buffer(const char* data, std::size_t size) noexcept
-        BEMAN_SENDOSIO_PRE(data || (size == 0))
-        : buffer_(data, size) {}
+  public:
+    using base::base;
 
-    const_buffer(std::nullptr_t, std::size_t) = delete; // use the default ctor
+    using base::data;
+    using base::size;
+    using base::operator+=;
+    using base::operator==;
+};
 
-    constexpr explicit(false) const_buffer(const mutable_buffer& other) noexcept
-        : const_buffer(other.buffer_.data(), other.size()) {}
+class mutable_buffer : private basic_buffer<false> {
+    using base = basic_buffer<false>;
 
-    constexpr const void* data() const noexcept { return buffer_.data(); }
+    friend base;
 
-    constexpr std::size_t size() const noexcept { return buffer_.size(); }
+  public:
+    using base::base;
 
-    constexpr friend bool operator==(const_buffer lhs, const_buffer rhs) noexcept {
-        return lhs.data() == rhs.data() && lhs.size() == rhs.size();
+    using base::data;
+    using base::size;
+    using base::operator+=;
+    using base::operator==;
+
+    constexpr operator const_buffer() const noexcept {
+        // pass buffer_.data() instead of data() to make this constexpr
+        return {buffer_.data(), size()};
     }
-
-    constexpr const_buffer& operator+=(std::size_t n) noexcept {
-        buffer_ = buffer_.last(size() - (std::min)(n, size()));
-        return *this;
-    }
-
-  private:
-    std::span<const char> buffer_;
 };
 
 namespace detail {
