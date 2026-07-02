@@ -11,15 +11,15 @@ import beman.sendosio;
 
 #else
 
-#if !BEMAN_SENDOSIO_USE_MODULES()
-#include <beman/sendosio/detail/contracts.hpp>
+    #if !BEMAN_SENDOSIO_USE_MODULES()
+        #include <beman/sendosio/detail/contracts.hpp>
 
-#include <algorithm>
-#include <concepts>
-#include <cstddef>
-#include <ranges>
-#include <span>
-#endif
+        #include <algorithm>
+        #include <concepts>
+        #include <cstddef>
+        #include <ranges>
+        #include <span>
+    #endif
 
 namespace beman::sendosio {
 
