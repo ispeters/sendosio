@@ -5,6 +5,13 @@
 
 #include <beman/sendosio/config.hpp>
 
+#if BEMAN_SENDOSIO_USE_MODULES() && !defined(BEMAN_SENDOSIO_INCLUDED_FROM_INTERFACE_UNIT)
+
+import beman.sendosio;
+
+#else
+
+#if !BEMAN_SENDOSIO_USE_MODULES()
 #include <beman/sendosio/detail/contracts.hpp>
 
 #include <algorithm>
@@ -12,12 +19,7 @@
 #include <cstddef>
 #include <ranges>
 #include <span>
-
-#if BEMAN_SENDOSIO_USE_MODULES() && !defined(BEMAN_SENDOSIO_INCLUDED_FROM_INTERFACE_UNIT)
-
-import beman.sendosio;
-
-#else
+#endif
 
 namespace beman::sendosio {
 
