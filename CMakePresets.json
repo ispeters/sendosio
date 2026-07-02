@@ -20,7 +20,8 @@
       ],
       "cacheVariables": {
         "CMAKE_CXX_STANDARD": "26",
-        "CMAKE_CXX_STANDARD_REQUIRED": true
+        "CMAKE_CXX_STANDARD_REQUIRED": true,
+        "CMAKE_CXX_FLAGS": "$env{CMAKE_CXX_FLAGS}"
       }
     },
     {

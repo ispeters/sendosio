@@ -114,7 +114,7 @@ IncludeCategories:
     Priority:        4
   - Regex:           '[<"](beman|stdexec)'
     Priority:        4
-  - Regex:           '<[[:alnum:]]+>'
+  - Regex:           '<[[:alnum:]_]+>'
     Priority:        5
   - Regex:           '.*'
     Priority:        3

@@ -11,6 +11,8 @@ import beman.sendosio;
 
 #else
 
+    #include <beman/sendosio/detail/contracts.hpp>
+
     #include <algorithm>
     #include <concepts>
     #include <cstddef>
@@ -26,6 +28,7 @@ struct mutable_buffer {
         : mutable_buffer(static_cast<char*>(data), size) {}
 
     constexpr mutable_buffer(char* data, std::size_t size) noexcept
+        BEMAN_SENDOSIO_PRE(data || (size == 0))
         : buffer_(data, size) {}
 
     mutable_buffer(std::nullptr_t, std::size_t) = delete; // use the default ctor
@@ -56,6 +59,7 @@ struct const_buffer {
         : const_buffer(static_cast<const char*>(data), size) {}
 
     constexpr const_buffer(const char* data, std::size_t size) noexcept
+        BEMAN_SENDOSIO_PRE(data || (size == 0))
         : buffer_(data, size) {}
 
     const_buffer(std::nullptr_t, std::size_t) = delete; // use the default ctor

@@ -5,4 +5,16 @@
 
 #cmakedefine01 BEMAN_SENDOSIO_USE_MODULES()
 
+#cmakedefine01 BEMAN_SENDOSIO_FORCE_NO_CONTRACTS()
+
+#if BEMAN_SENDOSIO_FORCE_NO_CONTRACTS()
+    #define BEMAN_SENDOSIO_USE_CONTRACTS() 0
+#else
+    #if defined(__cpp_contracts) && __cpp_contracts >= 202502L
+        #define BEMAN_SENDOSIO_USE_CONTRACTS() 1
+    #else
+        #define BEMAN_SENDOSIO_USE_CONTRACTS() 0
+    #endif
+#endif
+
 #endif
