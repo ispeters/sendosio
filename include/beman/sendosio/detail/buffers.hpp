@@ -18,7 +18,6 @@ import beman.sendosio;
         #include <concepts>
         #include <cstddef>
         #include <ranges>
-        #include <span>
     #endif
 
 namespace beman::sendosio {
@@ -32,23 +31,26 @@ class basic_buffer {
     using pointer      = value_type*;
     using void_pointer = void_type*;
 
-    std::span<value_type> buffer_;
+    using size_type = std::size_t;
+
+    pointer   data_{};
+    size_type size_{};
 
   public:
     constexpr basic_buffer() noexcept = default;
 
-    basic_buffer(void_pointer data, std::size_t size) noexcept
+    basic_buffer(void_pointer data, size_type size) noexcept
         : basic_buffer(static_cast<pointer*>(data), size) {}
 
-    constexpr basic_buffer(pointer data, std::size_t size) noexcept
+    constexpr basic_buffer(pointer data, size_type size) noexcept
         BEMAN_SENDOSIO_PRE(data || (size == 0))
-        : buffer_(data, size) {}
+        : data_(data), size_(size) {}
 
-    basic_buffer(std::nullptr_t, std::size_t) = delete; // use the default ctor
+    basic_buffer(std::nullptr_t, size_type) = delete; // use the default ctor
 
-    constexpr void_pointer data() const noexcept { return buffer_.data(); }
+    constexpr void_pointer data() const noexcept { return data_; }
 
-    constexpr std::size_t size() const noexcept { return buffer_.size(); }
+    constexpr size_type size() const noexcept { return size_; }
 
     template <class Self, std::convertible_to<Self> Other>
     constexpr bool operator==(this Self lhs, Other rhs) noexcept {
@@ -56,8 +58,10 @@ class basic_buffer {
     }
 
     template <class Self>
-    constexpr Self& operator+=(this Self& self, std::size_t n) noexcept {
-        self.buffer_ = self.buffer_.last(self.size() - (std::min)(n, self.size()));
+    constexpr Self& operator+=(this Self& self, size_type n) noexcept {
+        n = (std::min)(n, self.size());
+        self.data_ += n;
+        self.size_ -= n;
         return self;
     }
 };
@@ -90,8 +94,8 @@ class mutable_buffer : private basic_buffer<false> {
     using base::operator==;
 
     constexpr operator const_buffer() const noexcept {
-        // pass buffer_.data() instead of data() to make this constexpr
-        return {buffer_.data(), size()};
+        // pass data_ instead of data() to make this constexpr
+        return {data_, size()};
     }
 };
 
