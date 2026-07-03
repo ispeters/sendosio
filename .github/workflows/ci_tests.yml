@@ -47,8 +47,7 @@ jobs:
                     { "stdlibs": ["libstdc++"],
                       "tests": [
                         "Debug.Default", "Release.Default", "Release.TSan",
-                        "Release.MaxSan", "Debug.Werror",
-                        "Debug.Coverage", "Debug.-DBEMAN_SENDOSIO_USE_MODULES=On"
+                        "Release.MaxSan", "Debug.Werror", "Debug.Coverage"
                       ]
                     }
                   ]

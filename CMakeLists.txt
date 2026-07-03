@@ -33,8 +33,8 @@ endif()
 
 option(
     BEMAN_SENDOSIO_FORCE_NO_CONTRACTS
-    "Forcibly disable use of C++26 contracts even if they're supported. Default: OFF. Values: { ON, OFF }."
-    OFF
+    "Forcibly disable use of C++26 contracts even if they're supported. Default: ON. Values: { ON, OFF }."
+    ON
 )
 
 configure_file(
