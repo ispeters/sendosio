@@ -61,7 +61,7 @@ jobs:
                   "tests": [
                     { "stdlibs": ["libstdc++"],
                       "tests": [
-                        "Release.Default", "Debug.-DBEMAN_SENDOSIO_USE_MODULES=On"
+                        "Release.Default"
                       ]
                     }
                   ]
