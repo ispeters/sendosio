@@ -57,7 +57,8 @@
         "_debug-base"
       ],
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/infra/cmake/gnu-toolchain.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/infra/cmake/gnu-toolchain.cmake",
+        "CMAKE_CXX_FLAGS": "-fcontracts"
       }
     },
     {
@@ -68,7 +69,8 @@
         "_release-base"
       ],
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/infra/cmake/gnu-toolchain.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/infra/cmake/gnu-toolchain.cmake",
+        "CMAKE_CXX_FLAGS": "-fcontracts"
       }
     },
     {
