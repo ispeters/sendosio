@@ -121,8 +121,10 @@ template <auto CPO>
 struct begin_end_t {
     template <std::convertible_to<const_buffer> Buffer>
     constexpr auto operator()(Buffer& buffer) const noexcept {
-        std::span<Buffer, 1> span(std::addressof(buffer), 1);
-        return (*this)(span);
+        auto address = std::addressof(buffer);
+        auto range   = std::ranges::subrange(address, address + 1);
+
+        return (*this)(range);
     }
 
     template <const_buffer_sequence Buffers>
