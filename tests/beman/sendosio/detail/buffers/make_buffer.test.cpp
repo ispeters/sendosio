@@ -55,6 +55,12 @@ TEMPLATE_TEST_CASE("make_buffer identity works with non-empty buffers",
             TestType buffer(data, size);
             return buffer == sendosio::make_buffer(buffer);
         }));
+
+    STATIC_REQUIRE(
+        validate_predicate_over_nonempty_message([](char* data, std::size_t) noexcept {
+            // validate we normalize empty buffers to the default-constructed state
+            return sendosio::make_buffer(TestType(data, 0)) == sendosio::const_buffer();
+        }));
 }
 
 template <class CharT>
@@ -79,6 +85,12 @@ TEMPLATE_TEST_CASE("make_buffer(pointer, size) works",
             return buffer == sendosio::const_buffer(data, size);
         }));
 
+    STATIC_REQUIRE(validate_predicate_over_nonempty_message(
+        [](TestType* data, std::size_t) noexcept {
+            // validate we normalize empty buffers to the default-constructed state
+            return sendosio::make_buffer(data, 0) == sendosio::const_buffer();
+        }));
+
     REQUIRE(validate_predicate_over_nonempty_message(
         [](void_pointer_t<TestType> data, std::size_t size) noexcept {
             auto buffer = sendosio::make_buffer(data, size);
@@ -86,6 +98,12 @@ TEMPLATE_TEST_CASE("make_buffer(pointer, size) works",
             STATIC_REQUIRE(std::same_as<buffer_type_t<TestType>, decltype(buffer)>);
 
             return buffer == sendosio::const_buffer(data, size);
+        }));
+
+    REQUIRE(validate_predicate_over_nonempty_message(
+        [](void_pointer_t<TestType> data, std::size_t) noexcept {
+            // validate we normalize empty buffers to the default-constructed state
+            return sendosio::make_buffer(data, 0) == sendosio::const_buffer();
         }));
 }
 
@@ -102,6 +120,12 @@ TEMPLATE_TEST_CASE("make_buffer(pointer, size, max_size) works",
             return buffer == sendosio::const_buffer(data, max_size);
         }));
 
+    STATIC_REQUIRE(validate_predicate_over_nonempty_message(
+        [](TestType* data, std::size_t size) noexcept {
+            // validate we normalize empty buffers to the default-constructed state
+            return sendosio::make_buffer(data, size, 0) == sendosio::const_buffer();
+        }));
+
     REQUIRE(validate_predicate_over_nonempty_message(
         [](void_pointer_t<TestType> data, std::size_t size) noexcept {
             const std::size_t max_size = at_least_half(size);
@@ -111,6 +135,12 @@ TEMPLATE_TEST_CASE("make_buffer(pointer, size, max_size) works",
             STATIC_REQUIRE(std::same_as<buffer_type_t<TestType>, decltype(buffer)>);
 
             return buffer == sendosio::const_buffer(data, max_size);
+        }));
+
+    REQUIRE(validate_predicate_over_nonempty_message(
+        [](void_pointer_t<TestType> data, std::size_t size) noexcept {
+            // validate we normalize empty buffers to the default-constructed state
+            return sendosio::make_buffer(data, size, 0) == sendosio::const_buffer();
         }));
 }
 
@@ -125,6 +155,12 @@ TEST_CASE("make_buffer(string_view) works at constexpr time", "[sendosio::make_b
                 std::same_as<sendosio::const_buffer, decltype(buffer)>);
 
             return buffer.data() == data && buffer.size() == size;
+        }));
+
+    STATIC_REQUIRE(
+        validate_predicate_over_nonempty_message([](char* data, std::size_t) noexcept {
+            return sendosio::make_buffer(std::string_view(data, 0)) ==
+                   sendosio::const_buffer();
         }));
 }
 
@@ -154,6 +190,14 @@ TEST_CASE("make_buffer(string_view, max_size) works at constexpr time",
                 std::same_as<sendosio::const_buffer, decltype(buffer)>);
 
             return buffer.data() == data && buffer.size() == size;
+        }));
+
+    STATIC_REQUIRE(validate_predicate_over_nonempty_message(
+        [](char* data, std::size_t size) noexcept {
+            std::string_view view(data, size);
+
+            // validate we normalize empty buffers to the default-constructed state
+            return sendosio::make_buffer(view, 0) == sendosio::const_buffer();
         }));
 }
 
@@ -224,6 +268,9 @@ TEMPLATE_TEST_CASE("make_buffer(Range&&) and make_buffer(Range&&, max_size) work
 
         REQUIRE(buffer.data() == range.data());
         REQUIRE(buffer.size() == max_size);
+
+        // validate we normalize empty buffers to the default-constructed state
+        REQUIRE(sendosio::make_buffer(range, 0) == sendosio::const_buffer());
     }
 
     SECTION("make_buffer(Range&, 2 * size)") {

@@ -23,7 +23,7 @@ import beman.sendosio;
 namespace beman::sendosio {
 
 namespace make_buffer_detail {
-struct make_buffer_t;
+class make_buffer_t;
 }
 
 template <bool Const>

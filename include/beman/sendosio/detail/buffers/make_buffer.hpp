@@ -35,10 +35,22 @@ template <class Buffer>
 concept sendosio_buffer =
     std::same_as<Buffer, const_buffer> || std::same_as<Buffer, mutable_buffer>;
 
-struct make_buffer_t {
+class make_buffer_t {
+    template <class Buffer>
+    static constexpr Buffer clamp(Buffer buffer, std::size_t max_size) noexcept {
+        return normalize(Buffer::char_data(buffer), (std::min)(buffer.size(), max_size));
+    }
+
+    template <class Data>
+    static constexpr auto normalize(Data* data, std::size_t size) noexcept
+        -> std::conditional_t<std::is_const_v<Data>, const_buffer, mutable_buffer> {
+        return {size ? data : nullptr, size};
+    }
+
+  public:
     template <sendosio_buffer Buffer>
     [[nodiscard]] constexpr Buffer operator()(Buffer buffer) const noexcept {
-        return buffer;
+        return normalize(Buffer::char_data(buffer), buffer.size());
     }
 
     template <sendosio_buffer Buffer>
@@ -49,12 +61,12 @@ struct make_buffer_t {
 
     [[nodiscard]] constexpr mutable_buffer operator()(char*       data,
                                                       std::size_t size) const noexcept {
-        return {data ? data : nullptr, size};
+        return normalize(data, size);
     }
 
     [[nodiscard]] constexpr const_buffer operator()(const char* data,
                                                     std::size_t size) const noexcept {
-        return {data ? data : nullptr, size};
+        return normalize(data, size);
     }
 
     [[nodiscard]] mutable_buffer operator()(void* data, std::size_t size) const noexcept {
@@ -105,12 +117,6 @@ struct make_buffer_t {
         requires(!std::ranges::borrowed_range<Range>)
     void operator()(const Range&&,
                     std::size_t = 0) const = delete; // avoid creating a dangling buffer
-
-  private:
-    template <class Buffer>
-    static constexpr Buffer clamp(Buffer buffer, std::size_t max_size) noexcept {
-        return {Buffer::char_data(buffer), (std::min)(buffer.size(), max_size)};
-    }
 };
 
 } // namespace make_buffer_detail
