@@ -36,6 +36,17 @@ class basic_buffer {
     pointer   data_{};
     size_type size_{};
 
+    template <class Buffer>
+        requires std::is_base_of_v<basic_buffer, Buffer>
+    friend constexpr Buffer& operator+=(Buffer& buffer, size_type n) noexcept {
+        n = (std::min)(n, buffer.size());
+        buffer.data_ += n;
+        buffer.size_ -= n;
+        return buffer;
+    }
+
+    friend constexpr bool operator==(basic_buffer, basic_buffer) noexcept = default;
+
   public:
     constexpr basic_buffer() noexcept = default;
 
@@ -51,47 +62,34 @@ class basic_buffer {
     constexpr void_pointer data() const noexcept { return data_; }
 
     constexpr size_type size() const noexcept { return size_; }
-
-    template <class Self, std::convertible_to<Self> Other>
-    constexpr bool operator==(this Self lhs, Other rhs) noexcept {
-        return lhs.data() == rhs.data() && lhs.size() == rhs.size();
-    }
-
-    template <class Self>
-    constexpr Self& operator+=(this Self& self, size_type n) noexcept {
-        n = (std::min)(n, self.size());
-        self.data_ += n;
-        self.size_ -= n;
-        return self;
-    }
 };
 
-struct const_buffer : private basic_buffer<true> {
+class const_buffer : basic_buffer<true> {
     using base = basic_buffer<true>;
 
     friend base;
 
+    constexpr friend bool operator==(const_buffer, const_buffer) noexcept = default;
+
   public:
     using base::base;
 
     using base::data;
     using base::size;
-    using base::operator+=;
-    using base::operator==;
 };
 
-class mutable_buffer : private basic_buffer<false> {
+class mutable_buffer : basic_buffer<false> {
     using base = basic_buffer<false>;
 
     friend base;
 
+    constexpr friend bool operator==(mutable_buffer, mutable_buffer) noexcept = default;
+
   public:
     using base::base;
 
     using base::data;
     using base::size;
-    using base::operator+=;
-    using base::operator==;
 
     constexpr operator const_buffer() const noexcept {
         // pass data_ instead of data() to make this constexpr
