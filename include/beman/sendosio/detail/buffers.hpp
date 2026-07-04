@@ -82,7 +82,7 @@ class const_buffer : basic_buffer<true> {
     using base = basic_buffer<true>;
 
     friend base;
-    friend struct make_buffer_detail::make_buffer_t;
+    friend class make_buffer_detail::make_buffer_t;
 
     constexpr friend bool operator==(const_buffer, const_buffer) noexcept = default;
 
@@ -97,7 +97,7 @@ class mutable_buffer : basic_buffer<false> {
     using base = basic_buffer<false>;
 
     friend base;
-    friend struct make_buffer_detail::make_buffer_t;
+    friend class make_buffer_detail::make_buffer_t;
 
     constexpr friend bool operator==(mutable_buffer, mutable_buffer) noexcept = default;
 
