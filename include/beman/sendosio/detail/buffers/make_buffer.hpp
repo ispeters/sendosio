@@ -75,31 +75,36 @@ struct make_buffer_t {
         return clamp((*this)(data, size), max_size);
     }
 
-    template <class CharT, class Traits>
-    [[nodiscard]] constexpr const_buffer
-    operator()(std::basic_string_view<CharT, Traits> data) const noexcept {
-        return (*this)(data.data(), data.size() * sizeof(CharT));
-    }
-
-    template <class CharT, class Traits>
-    [[nodiscard]] constexpr const_buffer
-    operator()(std::basic_string_view<CharT, Traits> data,
-               std::size_t                           max_size) const noexcept {
-        return clamp((*this)(data), max_size);
-    }
-
-    template <non_buffer_contiguous_range Range>
-    [[nodiscard]] constexpr auto operator()(Range&& range) const noexcept {
+    template <non_buffer_contiguous_range View>
+        requires std::ranges::borrowed_range<View>
+    [[nodiscard]] constexpr auto operator()(View&& view) const noexcept {
         using namespace std::ranges;
 
-        return (*this)(data(range), size(range) * sizeof(range_value_t<Range>));
+        return (*this)(data(view), size(view) * sizeof(range_value_t<View>));
+    }
+
+    template <non_buffer_contiguous_range View>
+        requires std::ranges::borrowed_range<View>
+    [[nodiscard]] constexpr auto operator()(View&&      view,
+                                            std::size_t max_size) const noexcept {
+        return clamp((*this)(std::forward<View>(view)), max_size);
     }
 
     template <non_buffer_contiguous_range Range>
-    [[nodiscard]] constexpr auto operator()(Range&&     range,
-                                            std::size_t max_size) const noexcept {
-        return clamp((*this)(std::forward<Range>(range)), max_size);
+    [[nodiscard]] constexpr auto operator()(Range& range) const noexcept {
+        return (*this)(std::ranges::views::all(range));
     }
+
+    template <non_buffer_contiguous_range Range>
+    [[nodiscard]] constexpr auto operator()(Range&      range,
+                                            std::size_t max_size) const noexcept {
+        return clamp((*this)(range), max_size);
+    }
+
+    template <non_buffer_contiguous_range Range>
+        requires(!std::ranges::borrowed_range<Range>)
+    void operator()(const Range&&,
+                    std::size_t = 0) const = delete; // avoid creating a dangling buffer
 
   private:
     template <class Buffer>
