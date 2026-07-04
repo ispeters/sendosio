@@ -22,9 +22,12 @@ import beman.sendosio;
 
 namespace beman::sendosio {
 
+namespace make_buffer_detail {
+class make_buffer_t;
+}
+
 template <bool Const>
 class basic_buffer {
-  protected:
     using value_type = std::conditional_t<Const, const char, char>;
     using void_type  = std::conditional_t<Const, const void, void>;
 
@@ -36,16 +39,22 @@ class basic_buffer {
     pointer   data_{};
     size_type size_{};
 
+  protected:
+    template <class Buffer>
+    static constexpr pointer char_data(Buffer buffer) noexcept {
+        // the explicit cast to base is required for MSVC to permit us to access data_;
+        // the other supported compilers don't need the case because the derived classes
+        // declare us as a friend but that's not enough for MSVC. Mysteriously, a
+        // static_cast is insufficient--only a C-style cast overrides the access modifier
+        return ((basic_buffer&)buffer).data_;
+    }
+
     template <class Buffer>
         requires std::is_base_of_v<basic_buffer, Buffer>
     friend constexpr Buffer& operator+=(Buffer& buffer, size_type n) noexcept {
         n = (std::min)(n, buffer.size());
 
-        // the explicit cast to base is required for MSVC to permit us to access data_;
-        // the other supported compilers don't need the case because the derived classes
-        // declare us as a friend but that's not enough for MSVC. Mysteriously, a
-        // static_cast is insufficient--only a C-style cast overrides the access modifier
-        buffer = Buffer(((basic_buffer&)buffer).data_ + n, buffer.size() - n);
+        buffer = Buffer(char_data(buffer) + n, buffer.size() - n);
 
         return buffer;
     }
@@ -56,7 +65,7 @@ class basic_buffer {
     constexpr basic_buffer() noexcept = default;
 
     basic_buffer(void_pointer data, size_type size) noexcept
-        : basic_buffer(static_cast<pointer*>(data), size) {}
+        : basic_buffer(static_cast<pointer>(data), size) {}
 
     constexpr basic_buffer(pointer data, size_type size) noexcept
         BEMAN_SENDOSIO_PRE(data || (size == 0))
@@ -73,6 +82,7 @@ class const_buffer : basic_buffer<true> {
     using base = basic_buffer<true>;
 
     friend base;
+    friend class make_buffer_detail::make_buffer_t;
 
     constexpr friend bool operator==(const_buffer, const_buffer) noexcept = default;
 
@@ -87,6 +97,7 @@ class mutable_buffer : basic_buffer<false> {
     using base = basic_buffer<false>;
 
     friend base;
+    friend class make_buffer_detail::make_buffer_t;
 
     constexpr friend bool operator==(mutable_buffer, mutable_buffer) noexcept = default;
 
@@ -97,8 +108,7 @@ class mutable_buffer : basic_buffer<false> {
     using base::size;
 
     constexpr operator const_buffer() const noexcept {
-        // pass data_ instead of data() to make this constexpr
-        return {data_, size()};
+        return {char_data(*this), size()};
     }
 };
 

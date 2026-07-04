@@ -19,7 +19,7 @@
     #define BEMAN_SENDOSIO_PRE(...)
     #define BEMAN_SENDOSIO_POST(...)
     // TODO: consider whether this is wise
-    #define BEMAN_SENDOSIO_CONTRACT_ASSERT(...) assert(__VA_ARGS__)
+    #define BEMAN_SENDOSIO_CONTRACT_ASSERT(...) assert((__VA_ARGS__))
 #endif
 
 #endif
