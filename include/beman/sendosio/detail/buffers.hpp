@@ -40,8 +40,13 @@ class basic_buffer {
         requires std::is_base_of_v<basic_buffer, Buffer>
     friend constexpr Buffer& operator+=(Buffer& buffer, size_type n) noexcept {
         n = (std::min)(n, buffer.size());
-        buffer.data_ += n;
-        buffer.size_ -= n;
+
+        // the explicit cast to base is required for MSVC to permit us to access data_;
+        // the other supported compilers don't need the case because the derived classes
+        // declare us as a friend but that's not enough for MSVC. Mysteriously, a
+        // static_cast is insufficient--only a C-style cast overrides the access modifier
+        buffer = Buffer(((basic_buffer&)buffer).data_ + n, buffer.size() - n);
+
         return buffer;
     }
 
