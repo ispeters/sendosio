@@ -14,6 +14,8 @@ import beman.sendosio;
     #if !BEMAN_SENDOSIO_USE_MODULES()
         #include <beman/sendosio/detail/buffers.hpp>
 
+        #include <concepts>
+        #include <cstddef>
         #include <ranges>
         #include <string_view>
         #include <type_traits>
@@ -80,10 +82,10 @@ class make_buffer_t {
 
     void operator()(std::nullptr_t, std::size_t) = delete;
 
-    template <class Pointer>
-        requires std::invocable<make_buffer_t, Pointer, std::size_t>
+    template <class Data>
+        requires std::invocable<make_buffer_t, Data*, std::size_t>
     [[nodiscard]] constexpr auto
-    operator()(Pointer data, std::size_t size, std::size_t max_size) const noexcept {
+    operator()(Data* data, std::size_t size, std::size_t max_size) const noexcept {
         return clamp((*this)(data, size), max_size);
     }
 
