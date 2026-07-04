@@ -14,7 +14,7 @@ namespace sendosio = beman::sendosio;
 
 template <class TestType, std::invocable<TestType&> Predicate>
     requires std::same_as<bool, std::invoke_result_t<Predicate, TestType&>>
-consteval bool validate_predicate_over_empty_constexpr_buffer(Predicate pred) noexcept {
+constexpr bool validate_predicate_over_empty_constexpr_buffer(Predicate pred) noexcept {
     TestType buffer{};
 
     return pred(buffer);
@@ -113,13 +113,30 @@ TEST_CASE("buffer types are regular and mutually equality comparable",
 template <class TestType, std::invocable<TestType&, char*, std::size_t> Predicate>
     requires std::same_as<bool,
                           std::invoke_result_t<Predicate, TestType&, char*, std::size_t>>
-consteval bool
+constexpr bool
 validate_predicate_over_nonempty_constexpr_buffer(Predicate pred) noexcept {
     char message[] = "hello, world!";
 
     TestType buffer(message, sizeof(message));
 
     return pred(buffer, static_cast<char*>(message), sizeof(message));
+}
+
+TEMPLATE_TEST_CASE("buffer(void*, size) works as expected",
+                   "[sendosio::buffers]",
+                   sendosio::const_buffer,
+                   sendosio::mutable_buffer) {
+    REQUIRE(validate_predicate_over_empty_constexpr_buffer<TestType>(
+        [](TestType buffer) noexcept {
+            TestType withVoid(static_cast<void*>(nullptr), 0);
+            return withVoid == buffer;
+        }));
+
+    REQUIRE(validate_predicate_over_nonempty_constexpr_buffer<TestType>(
+        [](TestType buffer, void* data, std::size_t size) noexcept {
+            TestType withVoid(data, size);
+            return withVoid == buffer;
+        }));
 }
 
 TEMPLATE_TEST_CASE("buffer.data() returns the address of the memory it is a view of",
