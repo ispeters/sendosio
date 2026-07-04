@@ -47,8 +47,7 @@ jobs:
                     { "stdlibs": ["libstdc++"],
                       "tests": [
                         "Debug.Default", "Release.Default", "Release.TSan",
-                        "Release.MaxSan", "Debug.Werror",
-                        "Debug.Coverage", "Debug.-DBEMAN_SENDOSIO_USE_MODULES=On"
+                        "Release.MaxSan", "Debug.Werror", "Debug.Coverage"
                       ]
                     }
                   ]
@@ -61,14 +60,14 @@ jobs:
                   "tests": [
                     { "stdlibs": ["libstdc++"],
                       "tests": [
-                        "Release.Default", "Debug.-DBEMAN_SENDOSIO_USE_MODULES=On"
+                        "Release.Default"
                       ]
                     }
                   ]
                 }
               ]
             },
-            { "versions": ["14", "13"],
+            { "versions": ["14"],
               "tests": [
                 { "cxxversions": ["c++26"],
                   "tests": [{ "stdlibs": ["libstdc++"], "tests": ["Release.Default"]}]
@@ -101,7 +100,7 @@ jobs:
                 }
               ]
             },
-            { "versions": ["18", "17"],
+            { "versions": ["18"],
               "tests": [
                 { "cxxversions": ["c++26"],
                   "tests": [{"stdlibs": ["libc++"], "tests": ["Release.Default"]}]

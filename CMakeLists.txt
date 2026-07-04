@@ -31,6 +31,12 @@ if(BEMAN_SENDOSIO_USE_MODULES)
     set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 endif()
 
+option(
+    BEMAN_SENDOSIO_FORCE_NO_CONTRACTS
+    "Forcibly disable use of C++26 contracts even if they're supported. Default: ON. Values: { ON, OFF }."
+    ON
+)
+
 configure_file(
     "${PROJECT_SOURCE_DIR}/include/beman/sendosio/config_generated.hpp.in"
     "${PROJECT_BINARY_DIR}/include/beman/sendosio/config_generated.hpp"

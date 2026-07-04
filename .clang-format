@@ -86,7 +86,7 @@ BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: BeforeColon
 BreakStringLiterals: true
 # Please update .markdownlint.yaml if this line is to be updated
-ColumnLimit:     119
+ColumnLimit:     90
 CommentPragmas:  '^ IWYU pragma:'
 CompactNamespaces: false
 ConstructorInitializerIndentWidth: 4
@@ -104,21 +104,22 @@ ForEachMacros:
   - BOOST_FOREACH
 IfMacros:
   - KJ_IF_MAYBE
-IncludeBlocks:   Preserve
+IncludeBlocks:   Regroup
 IncludeCategories:
-  - Regex:           '^"(llvm|llvm-c|clang|clang-c)/'
-    Priority:        2
-    SortPriority:    0
-    CaseSensitive:   false
-  - Regex:           '^(<|"(gtest|isl|json)/)'
-    Priority:        3
-    SortPriority:    0
-    CaseSensitive:   false
-  - Regex:           '.*'
+  - Regex:           '^[<"]beman/sendosio/config.hpp[>"]'
     Priority:        1
-    SortPriority:    0
+  - Regex:           '^[<"]catch2/'
+    Priority:        2
+  - Regex:           '[<"]beman/sendosio'
+    Priority:        4
+  - Regex:           '[<"](beman|stdexec)'
+    Priority:        4
+  - Regex:           '<[[:alnum:]_]+>'
+    Priority:        5
+  - Regex:           '.*'
+    Priority:        3
     CaseSensitive:   false
-IncludeIsMainRegex: '$'
+IncludeIsMainRegex: '(.test)?$'
 IncludeIsMainSourceRegex: ''
 IndentAccessModifiers: false
 IndentCaseBlocks: false
@@ -184,7 +185,7 @@ RequiresClausePosition: OwnLine
 RequiresExpressionIndentation: OuterScope
 SeparateDefinitionBlocks: Leave
 ShortNamespaceLines: 1
-SortIncludes:    Never
+SortIncludes:    CaseSensitive
 SortJavaStaticImport: Before
 SortUsingDeclarations: LexicographicNumeric
 SpaceAfterCStyleCast: false
