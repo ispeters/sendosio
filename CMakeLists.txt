@@ -3,6 +3,7 @@
 cmake_minimum_required(VERSION 3.30...4.3)
 
 include(infra/cmake/enable-experimental-import-std.cmake)
+include(infra/cmake/CPM.cmake)
 
 project(
     beman.sendosio
@@ -63,10 +64,17 @@ configure_file(
 include(infra/cmake/beman-install-library.cmake)
 include(infra/cmake/BuildTelemetryConfig.cmake)
 
+cpmaddpackage("gh:NVIDIA/stdexec#main")
+
 if(BEMAN_SENDOSIO_USE_MODULES)
     add_library(beman.sendosio STATIC)
+    target_link_libraries(beman.sendosio PRIVATE STDEXEC::stdexec)
 else()
     add_library(beman.sendosio INTERFACE)
+    target_link_libraries(
+        beman.sendosio
+        INTERFACE $<BUILD_INTERFACE:STDEXEC::stdexec>
+    )
 endif()
 add_library(beman::sendosio ALIAS beman.sendosio)
 
