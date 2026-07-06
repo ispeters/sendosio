@@ -147,18 +147,50 @@ struct sliced {
     template <std::sentinel_for<iterator_type> Last>
     constexpr auto buffer_size_partial_sums(Last last) const noexcept {
         return buffer_sizes(last) |
+               // TODO: consider initializing init to -skip_front_; unsigned negation has
+               //       deterministic wrapping behaviour, and the class invariant implies
+               //       that, if skip_front_ is positive (meaning the initialization
+               //       causes wrapping), the subsequent additions will cause another wrap
+               //       back into valid range. This would save one arithmetic operation
+               //       per iteration, but at the cost of less clarity.
+               //
+               // NOTE: some buffers may have zero size, which keeps making me uncertain
+               //       of the above wrapping assertions but remember: skip_front_ is
+               //       initialized to zero (so the very first negation won't cause any
+               //       wrapping), *and* the call to remove_prefix in the constructor
+               //       establishes the invariant that begin_ does not point to an empty
+               //       buffer so every time we compute buffer_size_partial_sums, it's
+               //       always true that the first buffer's size is >= skip_front_ (either
+               //       because skip_front_ is zero, or because we've established that the
+               //       first buffer is non-empty)
                std::views::transform([init = std::size_t(0), adj = skip_front_](
                                          std::size_t size) mutable noexcept {
                    init += size;
-                   // this follows from the class invariant
+
+                   // this follows from the class invariant and implies that the
+                   // subtraction we're about to do won't wrap (its minimum possible
+                   // result is zero)
                    BEMAN_SENDOSIO_CONTRACT_ASSERT(init >= adj);
-                   return init;
+
+                   return init - adj;
                });
     }
 
     template <std::sentinel_for<iterator_type> Last>
     constexpr void shrink_to_length(Last last, std::size_t length) noexcept {
-        end_        = begin_;
+        if constexpr (std::random_access_iterator<iterator_type>) {
+            // if iterator_type is random-access then this contract check is cheap
+            BEMAN_SENDOSIO_CONTRACT_ASSERT(
+                // remove_prefix may have advanced begin_ (leaving end_ alone); for each
+                // such advancement, it has decremented seq_length_
+                end_ <= begin_ && seq_length_ == -std::ranges::distance(end_, begin_));
+        }
+
+        // this is necessary because we're called after an invocation of remove_prefix,
+        // which has very likely changed begin_ from its initial value
+        end_ = begin_;
+        // this is also necessary because remove_prefix decrements seq_length_ if it
+        // advances begin_, so it may be negative
         seq_length_ = 0;
 
         for (auto sum : buffer_size_partial_sums(last)) {
@@ -189,19 +221,25 @@ struct sliced {
             ++begin_;
             --seq_length_;
         }
+
+        // TODO: maybe we need to conditionally normalize the range to empty here
     }
 
   public:
     constexpr explicit sliced(const Buffers& seq,
                               std::size_t    offset,
                               std::size_t    length) noexcept
-        : begin_(sendosio::begin(seq)) {
-        // this initializes begin_ and skip_front_, and drives seq_length_ to a
-        // meaningless negative value
-        remove_prefix(sendosio::end(seq), offset);
+        : begin_(sendosio::begin(seq)), end_(begin_) {
+        // no point doing a bunch of work in remove_prefix only to leave the range empty
+        // anyway
+        if (length > 0) {
+            // this initializes begin_ and skip_front_, and drives seq_length_ to a
+            // meaningless negative value
+            remove_prefix(sendosio::end(seq), offset);
 
-        // this depends on begin_ and skip_front_ being initialized
-        shrink_to_length(sendosio::end(seq), length);
+            // this depends on begin_ and skip_front_ being initialized
+            shrink_to_length(sendosio::end(seq), length);
+        }
     }
 
     constexpr data_view<iterator_type> data() const noexcept {
@@ -226,6 +264,9 @@ struct buffer_slice_t {
         return sliced(seq, offset, length);
     }
 
+    // Capy deletes this overload to avoid creating dangling slices; I think it might be
+    // too restrictive because rvalue views are usually safe, but I'll need tests to
+    // confirm
     template <class Buffers>
         requires mutable_buffer_sequence<Buffers> || const_buffer_sequence<Buffers>
     void operator()(const Buffers&&, std::size_t = 0, std::size_t = 0) const = delete;
