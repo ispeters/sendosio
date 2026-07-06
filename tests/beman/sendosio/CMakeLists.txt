@@ -9,6 +9,7 @@ target_sources(
         detail/buffers.test.cpp
         detail/buffer_algorithms.test.cpp
         detail/buffer_concepts.test.cpp
+        detail/buffers/buffer_slice.test.cpp
         detail/buffers/make_buffer.test.cpp
 )
 target_link_libraries(
