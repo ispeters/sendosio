@@ -133,10 +133,8 @@ struct sliced {
     iterator_type begin_{};
     iterator_type end_{};
 
-    // invariant: skip_front_ == 0 || skip_front_ < begin_->size()
-    //
-    // TODO: should the invariant be skip_front_ <= begin_->size()?
-    //       I'm worried about the first buffer being empty
+    // invariant:
+    //    skip_front_ == 0 || (begin_ != end_ && skip_front_ < begin_->size())
     std::size_t skip_front_{};
     std::size_t skip_back_{};
 
@@ -150,33 +148,22 @@ struct sliced {
     template <std::sentinel_for<iterator_type> Last>
     constexpr auto buffer_size_partial_sums(Last last) const noexcept {
         return buffer_sizes(std::ranges::subrange(begin_, last)) |
-               // TODO: consider initializing init to -skip_front_; unsigned negation has
-               //       deterministic wrapping behaviour, and the class invariant implies
-               //       that, if skip_front_ is positive (meaning the initialization
-               //       causes wrapping), the subsequent additions will cause another wrap
-               //       back into valid range. This would save one arithmetic operation
-               //       per iteration, but at the cost of less clarity.
-               //
-               // NOTE: some buffers may have zero size, which keeps making me uncertain
-               //       of the above wrapping assertions but remember: skip_front_ is
-               //       initialized to zero (so the very first negation won't cause any
-               //       wrapp), *and* the call to update_front in the constructor
-               //       establishes the invariant that begin_ does not point to an empty
-               //       buffer so every time we compute buffer_size_partial_sums, it's
-               //       always true that the first buffer's size is >= skip_front_ (either
-               //       because skip_front_ is zero, or because we've established that the
-               //       first buffer is non-empty)
-               std::views::transform([init = std::size_t(0), adj = skip_front_](
-                                         std::size_t size) mutable noexcept {
-                   init += size;
+               std::views::transform(
+                   // we set init to -skip_front_ to avoid subtracting skip_front_ from
+                   // each partial sum. It's safe and correct because skip_front_ is
+                   // unsigned, so the wrap-around is well-defined, and the first
+                   // increment inside the transformation always undoes any wrapping
+                   // because either:
+                   //   1. we're initializing a sliced object and skip_front_ is zero, or
+                   //   2. we've established the class invariants and skip_front_ is
+                   //      strictly less than the size of the first buffer (unless there
+                   //      is no first, in which case skip_front_ is both zero and
+                   //      irrelevant).
+                   [init = -skip_front_](std::size_t size) mutable noexcept {
+                       init += size;
 
-                   // this follows from the class invariant and implies that the
-                   // subtraction we're about to do won't wrap (its minimum possible
-                   // result is zero)
-                   BEMAN_SENDOSIO_CONTRACT_ASSERT(init >= adj);
-
-                   return init - adj;
-               });
+                       return init;
+                   });
     }
 
     template <std::sentinel_for<iterator_type> Last>
