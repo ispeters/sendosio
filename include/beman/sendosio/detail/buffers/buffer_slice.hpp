@@ -112,6 +112,10 @@ struct data_view : std::ranges::view_interface<data_view<Iterator> > {
 
     constexpr const_iterator end() const noexcept { return {this, end_, seq_length_}; }
 
+    constexpr std::iter_difference_t<Iterator> size() const noexcept {
+        return seq_length_;
+    }
+
   private:
     Iterator                         begin_{};
     Iterator                         end_{};
@@ -138,15 +142,14 @@ struct sliced {
 
     std::iter_difference_t<iterator_type> seq_length_{};
 
-    template <std::sentinel_for<iterator_type> Last>
-    constexpr auto buffer_sizes(Last last) const noexcept {
-        return std::ranges::subrange(begin_, last) |
-               std::views::transform(std::ranges::size);
+    template <std::ranges::view View>
+    constexpr auto buffer_sizes(View buffers) const noexcept {
+        return buffers | std::views::transform(std::ranges::size);
     }
 
     template <std::sentinel_for<iterator_type> Last>
     constexpr auto buffer_size_partial_sums(Last last) const noexcept {
-        return buffer_sizes(last) |
+        return buffer_sizes(std::ranges::subrange(begin_, last)) |
                // TODO: consider initializing init to -skip_front_; unsigned negation has
                //       deterministic wrapping behaviour, and the class invariant implies
                //       that, if skip_front_ is positive (meaning the initialization
@@ -157,7 +160,7 @@ struct sliced {
                // NOTE: some buffers may have zero size, which keeps making me uncertain
                //       of the above wrapping assertions but remember: skip_front_ is
                //       initialized to zero (so the very first negation won't cause any
-               //       wrapping), *and* the call to remove_prefix in the constructor
+               //       wrapp), *and* the call to update_front in the constructor
                //       establishes the invariant that begin_ does not point to an empty
                //       buffer so every time we compute buffer_size_partial_sums, it's
                //       always true that the first buffer's size is >= skip_front_ (either
@@ -177,19 +180,19 @@ struct sliced {
     }
 
     template <std::sentinel_for<iterator_type> Last>
-    constexpr void shrink_to_length(Last last, std::size_t length) noexcept {
+    constexpr void initialize_back(Last last, std::size_t length) noexcept {
         if constexpr (std::random_access_iterator<iterator_type>) {
             // if iterator_type is random-access then this contract check is cheap
             BEMAN_SENDOSIO_CONTRACT_ASSERT(
-                // remove_prefix may have advanced begin_ (leaving end_ alone); for each
+                // update_front may have advanced begin_ (leaving end_ alone); for each
                 // such advancement, it has decremented seq_length_
                 end_ <= begin_ && seq_length_ == -std::ranges::distance(end_, begin_));
         }
 
-        // this is necessary because we're called after an invocation of remove_prefix,
+        // this is necessary because we're called after an invocation of update_front,
         // which has very likely changed begin_ from its initial value
         end_ = begin_;
-        // this is also necessary because remove_prefix decrements seq_length_ if it
+        // this is also necessary because update_front decrements seq_length_ if it
         // advances begin_, so it may be negative
         seq_length_ = 0;
 
@@ -206,23 +209,25 @@ struct sliced {
         }
     }
 
-    template <std::sentinel_for<iterator_type> Last>
-    constexpr void remove_prefix(Last last, std::size_t prefix) noexcept {
-        for (auto sum : buffer_size_partial_sums(last)) {
-            if (sum > prefix) {
+    template <std::ranges::view View>
+    constexpr void update_front(View buffers, std::size_t prefix) noexcept {
+        for (auto size : buffer_sizes(buffers)) {
+            if (size > prefix) {
                 // we found the buffer we need to skip to; now adjust skip_front_ to skip
                 // the right number of bytes into the new first buffer
-                BEMAN_SENDOSIO_CONTRACT_ASSERT(begin_->size() >= (sum - prefix));
-
-                skip_front_ = begin_->size() - (sum - prefix);
+                skip_front_ = prefix;
                 break;
             }
 
+            prefix -= size;
             ++begin_;
             --seq_length_;
         }
+    }
 
-        // TODO: maybe we need to conditionally normalize the range to empty here
+    template <std::bidirectional_iterator First, std::sentinel_for<First> Last>
+    constexpr void initialize_front(First first, Last last, std::size_t prefix) noexcept {
+        update_front(std::ranges::subrange(first, last), prefix);
     }
 
   public:
@@ -230,15 +235,16 @@ struct sliced {
                               std::size_t    offset,
                               std::size_t    length) noexcept
         : begin_(sendosio::begin(seq)), end_(begin_) {
-        // no point doing a bunch of work in remove_prefix only to leave the range empty
+        // no point doing a bunch of work in update_front only to leave the range empty
         // anyway
         if (length > 0) {
             // this initializes begin_ and skip_front_, and drives seq_length_ to a
             // meaningless negative value
-            remove_prefix(sendosio::end(seq), offset);
+            initialize_front(sendosio::begin(seq), sendosio::end(seq), offset);
 
-            // this depends on begin_ and skip_front_ being initialized
-            shrink_to_length(sendosio::end(seq), length);
+            // this depends on begin_ and skip_front_ being initialized, above; it updates
+            // end_, skip_back_, and seq_length_ to the correct values
+            initialize_back(sendosio::end(seq), length);
         }
     }
 
@@ -247,7 +253,9 @@ struct sliced {
     }
 
     constexpr void remove_prefix(std::size_t prefix) noexcept {
-        remove_prefix(end_, prefix);
+        // update begin_, skip_front_, and seq_length_ to account for having removed
+        // prefix bytes from the front of the buffer sequence
+        update_front(data(), prefix);
     }
 };
 

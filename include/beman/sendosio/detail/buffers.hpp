@@ -50,11 +50,18 @@ class basic_buffer {
     }
 
     template <class Buffer>
-        requires std::is_base_of_v<basic_buffer, Buffer>
-    friend constexpr Buffer& operator+=(Buffer& buffer, size_type n) noexcept {
+        requires std::is_base_of_v<basic_buffer, std::remove_reference_t<Buffer> >
+    friend constexpr std::remove_cvref_t<Buffer> operator+(Buffer&&  buffer,
+                                                           size_type n) noexcept {
         n = (std::min)(n, buffer.size());
 
-        buffer = Buffer(char_data(buffer) + n, buffer.size() - n);
+        return {char_data(buffer) + n, buffer.size() - n};
+    }
+
+    template <class Buffer>
+        requires std::is_base_of_v<basic_buffer, Buffer>
+    friend constexpr Buffer& operator+=(Buffer& buffer, size_type n) noexcept {
+        buffer = buffer + n;
 
         return buffer;
     }
