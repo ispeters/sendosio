@@ -13,6 +13,11 @@
 
 namespace {
 
+// TODO: this file probably needs more test cases; for one thing, it would be a good idea
+//       to confirm that the results of `buffer_slice(buffers).data()` are independent
+//       views into `buffers`, and that, for example, removing a prefix from the slice
+//       doesn't affect any of the previously-returned views.
+
 namespace sendosio = beman::sendosio;
 
 template <std::invocable<sendosio::mutable_buffer, char*> Predicate>
