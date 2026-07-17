@@ -25,6 +25,10 @@
             gersemi
             ninja
           ];
+
+          shellHook = ''
+            export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -B${pkgs.llvmPackages_22.libcxx}/lib"
+          '';
         };
       };
     };
