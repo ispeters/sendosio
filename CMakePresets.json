@@ -50,6 +50,13 @@
       }
     },
     {
+      "name": "_modules-base",
+      "hidden": true,
+      "cacheVariables": {
+        "BEMAN_SENDOSIO_USE_MODULES": "1"
+      }
+    },
+    {
       "name": "gcc-debug",
       "displayName": "GCC Debug Build",
       "inherits": [
@@ -88,6 +95,14 @@
         "string": "${hostSystemName}",
         "list": ["Linux", "Darwin"]
       }
+    },
+    {
+      "name": "llvm-debug-modules",
+      "displayName": "Clang Debug Build with modules",
+      "inherits": [
+        "llvm-debug",
+        "_modules-base"
+      ]
     },
     {
       "name": "llvm-release",
@@ -181,6 +196,14 @@
       ]
     },
     {
+      "name": "_modules-build",
+      "hidden": true,
+      "inherits": "_root-build",
+      "targets": [
+        "all"
+      ]
+    },
+    {
       "name": "gcc-debug",
       "configurePreset": "gcc-debug",
       "inherits": [
@@ -206,6 +229,13 @@
       "configurePreset": "llvm-release",
       "inherits": [
         "_root-build"
+      ]
+    },
+    {
+      "name": "llvm-debug-modules",
+      "configurePreset": "llvm-debug-modules",
+      "inherits": [
+        "_modules-build"
       ]
     },
     {
@@ -263,6 +293,11 @@
       "name": "llvm-debug",
       "inherits": "_test_base",
       "configurePreset": "llvm-debug"
+    },
+    {
+      "name": "llvm-debug-modules",
+      "inherits": "_test_base",
+      "configurePreset": "llvm-debug-modules"
     },
     {
       "name": "llvm-release",
@@ -339,6 +374,23 @@
         {
           "type": "test",
           "name": "llvm-debug"
+        }
+      ]
+    },
+    {
+      "name": "llvm-debug-modules",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "llvm-debug-modules"
+        },
+        {
+          "type": "build",
+          "name": "llvm-debug-modules"
+        },
+        {
+          "type": "test",
+          "name": "llvm-debug-modules"
         }
       ]
     },
