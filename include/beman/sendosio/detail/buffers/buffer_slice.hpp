@@ -34,13 +34,13 @@ struct data_view : std::ranges::view_interface<data_view<Iterator> > {
 
     constexpr data_view(Iterator                         begin,
                         Iterator                         end,
-                        std::size_t                      skip_first,
-                        std::size_t                      skip_last,
+                        std::size_t                      skip_front,
+                        std::size_t                      skip_back,
                         std::iter_difference_t<Iterator> seq_length) noexcept
         : begin_(begin),
           end_(end),
-          skip_first_(skip_first),
-          skip_last_(skip_last),
+          skip_front_(skip_front),
+          skip_back_(skip_back),
           seq_length_(seq_length) {}
 
     struct const_iterator {
@@ -60,14 +60,14 @@ struct data_view : std::ranges::view_interface<data_view<Iterator> > {
 
             if (index_ == 0) {
                 // this is the first buffer in the sequence so we need to exclude from its
-                // beginning skip_first_ bytes
-                ret += parent_->skip_first_;
+                // beginning skip_front_ bytes
+                ret += parent_->skip_front_;
             }
 
             if (index_ == (parent_->seq_length_ - 1)) {
                 // this is the last buffer in the sequence so we need to exclude from its
-                // end skip_last_ bytes
-                ret = make_buffer(ret, ret.size() - parent_->skip_last_);
+                // end skip_back_ bytes
+                ret = make_buffer(ret, ret.size() - parent_->skip_back_);
             }
 
             return ret;
@@ -119,8 +119,8 @@ struct data_view : std::ranges::view_interface<data_view<Iterator> > {
   private:
     Iterator                         begin_{};
     Iterator                         end_{};
-    std::size_t                      skip_first_{};
-    std::size_t                      skip_last_{};
+    std::size_t                      skip_front_{};
+    std::size_t                      skip_back_{};
     std::iter_difference_t<Iterator> seq_length_{};
 };
 
