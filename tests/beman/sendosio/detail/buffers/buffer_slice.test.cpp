@@ -9,6 +9,7 @@
 #include <beman/sendosio/detail/contracts.hpp>
 
 #include <array>
+#include <ranges>
 
 namespace {
 

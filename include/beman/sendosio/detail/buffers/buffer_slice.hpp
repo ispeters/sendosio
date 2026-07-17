@@ -15,6 +15,7 @@ import beman.sendosio;
         #include <beman/sendosio/detail/buffers.hpp>
         #include <beman/sendosio/detail/buffers/make_buffer.hpp>
         #include <beman/sendosio/detail/concept/slice.hpp>
+        #include <beman/sendosio/detail/contracts.hpp>
 
         #include <cstddef>
         #include <iterator>
