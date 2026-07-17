@@ -27,22 +27,16 @@ import beman.sendosio;
 namespace beman::sendosio {
 namespace buffer_slice_detail {
 
+template <std::ranges::view View>
+constexpr auto buffer_sizes(View buffers) noexcept {
+    return buffers | std::views::transform(std::ranges::size);
+}
+
 // heavily inspired by Claude Sonnet 5
 // https://claude.ai/share/cb3523ee-45b9-4984-b6af-2c0da373206a
-template <class Iterator>
+template <std::bidirectional_iterator Iterator>
 struct data_view : std::ranges::view_interface<data_view<Iterator> > {
     constexpr data_view() noexcept = default;
-
-    constexpr data_view(Iterator                         begin,
-                        Iterator                         end,
-                        std::size_t                      skip_front,
-                        std::size_t                      skip_back,
-                        std::iter_difference_t<Iterator> seq_length) noexcept
-        : begin_(begin),
-          end_(end),
-          skip_front_(skip_front),
-          skip_back_(skip_back),
-          seq_length_(seq_length) {}
 
     struct const_iterator {
         using value_type        = std::iter_value_t<Iterator>;
@@ -118,35 +112,33 @@ struct data_view : std::ranges::view_interface<data_view<Iterator> > {
     }
 
   private:
-    Iterator                         begin_{};
-    Iterator                         end_{};
+    Iterator begin_{};
+    Iterator end_{};
+    // invariant:
+    //    skip_front_ == 0 || (begin_ != end_ && skip_front_ < begin_->size())
     std::size_t                      skip_front_{};
     std::size_t                      skip_back_{};
     std::iter_difference_t<Iterator> seq_length_{};
-};
 
-template <class Buffers>
-struct sliced {
-    using iterator_type = decltype(sendosio::begin(std::declval<const Buffers&>()));
-    using buffer_type   = sendosio::buffer_type<Buffers>;
+    template <class Buffer>
+    constexpr data_view(const Buffer& seq,
+                        std::size_t   offset,
+                        std::size_t   length) noexcept
+        : begin_(sendosio::begin(seq)), end_(begin_) {
+        // no point doing a bunch of work in update_front only to leave the range empty
+        // anyway
+        if (length > 0) {
+            // this initializes begin_ and skip_front_, and drives seq_length_ to a
+            // meaningless negative value
+            initialize_front(sendosio::begin(seq), sendosio::end(seq), offset);
 
-  private:
-    iterator_type begin_{};
-    iterator_type end_{};
-
-    // invariant:
-    //    skip_front_ == 0 || (begin_ != end_ && skip_front_ < begin_->size())
-    std::size_t skip_front_{};
-    std::size_t skip_back_{};
-
-    std::iter_difference_t<iterator_type> seq_length_{};
-
-    template <std::ranges::view View>
-    constexpr auto buffer_sizes(View buffers) const noexcept {
-        return buffers | std::views::transform(std::ranges::size);
+            // this depends on begin_ and skip_front_ being initialized, above; it updates
+            // end_, skip_back_, and seq_length_ to the correct values
+            initialize_back(sendosio::end(seq), length);
+        }
     }
 
-    template <std::sentinel_for<iterator_type> Last>
+    template <std::sentinel_for<Iterator> Last>
     constexpr auto buffer_size_partial_sums(Last last) const noexcept {
         return buffer_sizes(std::ranges::subrange(begin_, last)) |
                std::views::transform(
@@ -167,10 +159,10 @@ struct sliced {
                    });
     }
 
-    template <std::sentinel_for<iterator_type> Last>
+    template <std::sentinel_for<Iterator> Last>
     constexpr void initialize_back(Last last, std::size_t length) noexcept {
-        if constexpr (std::random_access_iterator<iterator_type>) {
-            // if iterator_type is random-access then this contract check is cheap
+        if constexpr (std::random_access_iterator<Iterator>) {
+            // if Iterator is random-access then this contract check is cheap
             BEMAN_SENDOSIO_CONTRACT_ASSERT(
                 // update_front may have advanced begin_ (leaving end_ alone); for each
                 // such advancement, it has decremented seq_length_
@@ -218,41 +210,37 @@ struct sliced {
         update_front(std::ranges::subrange(first, last), prefix);
     }
 
-  public:
+    template <const_buffer_sequence Buffers>
+    friend struct sliced;
+};
+
+template <const_buffer_sequence Buffers>
+struct sliced {
+    using iterator_type = decltype(sendosio::begin(std::declval<const Buffers&>()));
+    using buffer_type   = sendosio::buffer_type<Buffers>;
+
     constexpr explicit sliced(const Buffers& seq,
                               std::size_t    offset,
                               std::size_t    length) noexcept
-        : begin_(sendosio::begin(seq)), end_(begin_) {
-        // no point doing a bunch of work in update_front only to leave the range empty
-        // anyway
-        if (length > 0) {
-            // this initializes begin_ and skip_front_, and drives seq_length_ to a
-            // meaningless negative value
-            initialize_front(sendosio::begin(seq), sendosio::end(seq), offset);
+        : data_(seq, offset, length) {}
 
-            // this depends on begin_ and skip_front_ being initialized, above; it updates
-            // end_, skip_back_, and seq_length_ to the correct values
-            initialize_back(sendosio::end(seq), length);
-        }
-    }
-
-    constexpr data_view<iterator_type> data() const noexcept {
-        return {begin_, end_, skip_front_, skip_back_, seq_length_};
-    }
+    constexpr data_view<iterator_type> data() const noexcept { return data_; }
 
     constexpr void remove_prefix(std::size_t prefix) noexcept {
         // update begin_, skip_front_, and seq_length_ to account for having removed
         // prefix bytes from the front of the buffer sequence
-        update_front(data(), prefix);
+        data_.update_front(data(), prefix);
     }
+
+  private:
+    data_view<iterator_type> data_;
 };
 
 template <class Buffers>
 sliced(const Buffers&) -> sliced<Buffers>;
 
 struct buffer_slice_t {
-    template <class Buffers>
-        requires mutable_buffer_sequence<Buffers> || const_buffer_sequence<Buffers>
+    template <const_buffer_sequence Buffers>
     constexpr slice auto operator()(
         const Buffers& seq,
         std::size_t    offset = 0,
@@ -263,8 +251,7 @@ struct buffer_slice_t {
     // Capy deletes this overload to avoid creating dangling slices; I think it might be
     // too restrictive because rvalue views are usually safe, but I'll need tests to
     // confirm
-    template <class Buffers>
-        requires mutable_buffer_sequence<Buffers> || const_buffer_sequence<Buffers>
+    template <const_buffer_sequence Buffers>
     void operator()(const Buffers&&, std::size_t = 0, std::size_t = 0) const = delete;
 };
 
