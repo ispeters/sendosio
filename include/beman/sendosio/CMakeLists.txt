@@ -4,7 +4,11 @@ if(BEMAN_SENDOSIO_USE_MODULES)
     target_sources(
         beman.sendosio
         PUBLIC
-            FILE_SET CXX_MODULES FILES sendosio.cppm
+            FILE_SET CXX_MODULES
+                FILES
+                    sendosio.cppm
+                    detail/buffers.cppm
+                    detail/buffers/make_buffer.cppm
             FILE_SET HEADERS
                 FILES
                     config.hpp
