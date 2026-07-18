@@ -68,7 +68,10 @@ cpmaddpackage("gh:NVIDIA/stdexec#main")
 
 if(BEMAN_SENDOSIO_USE_MODULES)
     add_library(beman.sendosio STATIC)
-    target_link_libraries(beman.sendosio PRIVATE STDEXEC::stdexec)
+    target_link_libraries(
+        beman.sendosio
+        PRIVATE $<BUILD_INTERFACE:STDEXEC::stdexec>
+    )
 else()
     add_library(beman.sendosio INTERFACE)
     target_link_libraries(
