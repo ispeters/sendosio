@@ -17,7 +17,7 @@ import beman.sendosio;
     #include <beman/sendosio/detail/buffers/make_buffer.hpp>
     #include <beman/sendosio/detail/buffers/slice_of.hpp>
     #include <beman/sendosio/detail/concept/read_stream.hpp>
-    #include <beman/sendosio/detail/concept/slice.hpp>
+    #include <beman/sendosio/detail/read.hpp>
 
 #endif // BEMAN_SENDOSIO_USE_MODULES() &&
        // !defined(BEMAN_SENDOSIO_INCLUDED_FROM_INTERFACE_UNIT)
