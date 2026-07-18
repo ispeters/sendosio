@@ -5,6 +5,7 @@
 #include <catch2/catch_all.hpp>
 
 #include <beman/sendosio/detail/buffers.hpp>
+#include <beman/sendosio/detail/buffers/consuming_buffers.hpp>
 #include <beman/sendosio/detail/buffers/make_buffer.hpp>
 #include <beman/sendosio/detail/contracts.hpp>
 
@@ -33,18 +34,17 @@ TEMPLATE_TEST_CASE("buffer_slice(buffer) is the identity",
                    "[sendosio::buffer_slice]",
                    sendosio::const_buffer,
                    sendosio::mutable_buffer) {
-    STATIC_REQUIRE(validate_predicate_over_nonempty_buffer([](const TestType buffer,
-                                                              auto) noexcept {
-        auto slice = sendosio::buffer_slice(buffer);
+    STATIC_REQUIRE(
+        validate_predicate_over_nonempty_buffer([](const TestType buffer, auto) noexcept {
+            auto slice = sendosio::buffer_slice(buffer);
 
-        auto data = slice.data();
+            static_assert(
+                std::same_as<TestType, std::ranges::range_value_t<decltype(slice)>>);
 
-        static_assert(std::same_as<TestType, std::ranges::range_value_t<decltype(data)>>);
-
-        // this asserts that data contains one buffer that is equal to buffer, i.e.
-        // that buffer_slice(buffer) is the identity
-        return std::ranges::equal(data, std::views::single(buffer));
-    }));
+            // this asserts that data contains one buffer that is equal to buffer, i.e.
+            // that buffer_slice(buffer) is the identity
+            return std::ranges::equal(slice, std::views::single(buffer));
+        }));
 }
 
 TEMPLATE_TEST_CASE("buffer_slice(buffer, offset) removes a prefix from the given buffer",
@@ -57,9 +57,7 @@ TEMPLATE_TEST_CASE("buffer_slice(buffer, offset) removes a prefix from the given
 
             auto slice = sendosio::buffer_slice(buffer, offset);
 
-            auto data = slice.data();
-
-            // slice and data point into buffer so, to validate that data is correct, we
+            // slice points into buffer so, to validate that slice is correct, we
             // can't touch buffer; instead, make a copy, mutate it, and compare to the
             // result
             auto buffer_copy = buffer;
@@ -67,7 +65,7 @@ TEMPLATE_TEST_CASE("buffer_slice(buffer, offset) removes a prefix from the given
 
             BEMAN_SENDOSIO_CONTRACT_ASSERT(buffer_copy.data() == (message + offset));
 
-            return std::ranges::equal(data, std::views::single(buffer_copy));
+            return std::ranges::equal(slice, std::views::single(buffer_copy));
         }));
 
     STATIC_REQUIRE(
@@ -75,10 +73,8 @@ TEMPLATE_TEST_CASE("buffer_slice(buffer, offset) removes a prefix from the given
             // remove exactly the whole buffer
             auto slice = sendosio::buffer_slice(buffer, buffer.size());
 
-            auto data = slice.data();
-
             // there's no data left in the slice so the range is empty
-            return std::ranges::empty(data);
+            return std::ranges::empty(slice);
         }));
 
     STATIC_REQUIRE(
@@ -87,10 +83,8 @@ TEMPLATE_TEST_CASE("buffer_slice(buffer, offset) removes a prefix from the given
             auto slice =
                 sendosio::buffer_slice(buffer, (std::numeric_limits<std::size_t>::max)());
 
-            auto data = slice.data();
-
             // the result of offsetting "into infinity" is still just an empty range
-            return std::ranges::empty(data);
+            return std::ranges::empty(slice);
         }));
 }
 
@@ -106,18 +100,14 @@ TEMPLATE_TEST_CASE("buffer_slice(buffer, 0, length) limits the given buffer to a
 
         auto slice = sendosio::buffer_slice(buffer, 0, length);
 
-        auto data = slice.data();
-
-        return std::ranges::equal(data, std::views::single(TestType(message, length)));
+        return std::ranges::equal(slice, std::views::single(TestType(message, length)));
     }));
 
     STATIC_REQUIRE(
         validate_predicate_over_nonempty_buffer([](const TestType buffer, auto) noexcept {
             auto slice = sendosio::buffer_slice(buffer, 0, 0);
 
-            auto data = slice.data();
-
-            return std::ranges::empty(data);
+            return std::ranges::empty(slice);
         }));
 }
 
@@ -136,9 +126,7 @@ TEMPLATE_TEST_CASE(
 
         auto slice = sendosio::buffer_slice(buffer, offset, length);
 
-        auto data = slice.data();
-
-        return std::ranges::equal(data,
+        return std::ranges::equal(slice,
                                   std::views::single(TestType(message + offset, length)));
     }));
 }
@@ -152,9 +140,7 @@ TEMPLATE_TEST_CASE("buffer_slice(empty_range<TestType>(), ...) works",
 
         auto slice = sendosio::buffer_slice(range, args...);
 
-        auto data = slice.data();
-
-        return std::ranges::empty(data);
+        return std::ranges::empty(slice);
     };
 
     STATIC_REQUIRE(predicate());
@@ -174,9 +160,7 @@ TEMPLATE_TEST_CASE("buffer_slice(array{buffer, buffer, ...}) duplicates buffer",
 
             auto slice = sendosio::buffer_slice(buffers);
 
-            auto data = slice.data();
-
-            return std::ranges::equal(buffers, data);
+            return std::ranges::equal(buffers, slice);
         }));
 
     STATIC_REQUIRE(
@@ -185,9 +169,7 @@ TEMPLATE_TEST_CASE("buffer_slice(array{buffer, buffer, ...}) duplicates buffer",
 
             auto slice = sendosio::buffer_slice(buffers);
 
-            auto data = slice.data();
-
-            return std::ranges::equal(buffers, data);
+            return std::ranges::equal(buffers, slice);
         }));
 }
 
@@ -205,15 +187,13 @@ TEMPLATE_TEST_CASE(
             // create a slice that straddles the two copies
             auto slice = sendosio::buffer_slice(buffers, about_half, buffer.size());
 
-            auto data = slice.data();
-
             std::array<TestType, 2> expected{
                 // trim the first from the front
                 buffer + about_half,
                 // trim the second from the back
                 sendosio::make_buffer(buffer, buffer.size() - about_half)};
 
-            return std::ranges::equal(data, expected);
+            return std::ranges::equal(slice, expected);
         }));
 
     STATIC_REQUIRE(
@@ -225,8 +205,6 @@ TEMPLATE_TEST_CASE(
             // create a slice that straddles the middle copy
             auto slice = sendosio::buffer_slice(buffers, about_half, 2 * buffer.size());
 
-            auto data = slice.data();
-
             std::array<TestType, 3> expected{
                 // trim the first from the front
                 buffer + about_half,
@@ -235,7 +213,7 @@ TEMPLATE_TEST_CASE(
                 // trim the second from the back
                 sendosio::make_buffer(buffer, buffer.size() - about_half)};
 
-            return std::ranges::equal(data, expected);
+            return std::ranges::equal(slice, expected);
         }));
 
     STATIC_REQUIRE(
@@ -244,9 +222,7 @@ TEMPLATE_TEST_CASE(
 
             auto slice = sendosio::buffer_slice(buffers, buffer.size() * 2);
 
-            auto data = slice.data();
-
-            return std::ranges::empty(data);
+            return std::ranges::empty(slice);
         }));
 }
 
@@ -259,7 +235,8 @@ TEMPLATE_TEST_CASE("buffer_slice(...).remove_prefix(prefix) handles all continge
         validate_predicate_over_nonempty_buffer([](const TestType buffer, auto) noexcept {
             const auto about_half = buffer.size() / 2;
 
-            auto slice = sendosio::buffer_slice(buffer);
+            auto slice =
+                sendosio::sliced(buffer, 0, (std::numeric_limits<std::size_t>::max)());
 
             slice.remove_prefix(about_half);
 
@@ -270,7 +247,7 @@ TEMPLATE_TEST_CASE("buffer_slice(...).remove_prefix(prefix) handles all continge
 
     STATIC_REQUIRE(
         validate_predicate_over_nonempty_buffer([](const TestType buffer, auto) noexcept {
-            auto slice = sendosio::buffer_slice(buffer, 0, 2);
+            auto slice = sendosio::sliced(buffer, 0, 2);
 
             slice.remove_prefix(1);
 
@@ -283,7 +260,7 @@ TEMPLATE_TEST_CASE("buffer_slice(...).remove_prefix(prefix) handles all continge
 
     STATIC_REQUIRE(
         validate_predicate_over_nonempty_buffer([](const TestType buffer, auto) noexcept {
-            auto slice = sendosio::buffer_slice(buffer, 0, 2);
+            auto slice = sendosio::sliced(buffer, 0, 2);
 
             slice.remove_prefix(3);
 

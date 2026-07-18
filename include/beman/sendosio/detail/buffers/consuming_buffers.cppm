@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-module;
 
-#include <beman/sendosio/detail/contracts.hpp>
-
-export module beman.sendosio:detail.buffers.buffer_slice;
+export module beman.sendosio:detail.buffers.consuming_buffers;
 
 import std;
-import :detail.buffers.make_buffer;
 import :detail.buffers.slice_of;
 import :detail.buffers;
 
@@ -14,6 +10,6 @@ import :detail.buffers;
 export {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winclude-angled-in-module-purview"
-#include <beman/sendosio/detail/buffers/buffer_slice.hpp>
+#include <beman/sendosio/detail/buffers/consuming_buffers.hpp>
 #pragma clang diagnostic pop
 }
