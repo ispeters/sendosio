@@ -14,13 +14,11 @@ import beman.sendosio;
     #if !BEMAN_SENDOSIO_USE_MODULES()
         #include <beman/sendosio/detail/buffers.hpp>
         #include <beman/sendosio/detail/concept/read_stream.hpp>
-        #include <stdexec/execution.hpp>
+        #include <beman/sendosio/detail/vendor/execution.hpp>
     #endif
 
 namespace beman::sendosio {
 namespace read_detail {
-
-namespace ex = STDEXEC;
 
 template <class Stream, class Buffers, class Receiver>
 struct op_state {
@@ -76,7 +74,7 @@ inline constexpr read_t read{};
 } // namespace beman::sendosio
 
 template <>
-struct STDEXEC::__sexpr_impl<beman::sendosio::read_t>
+struct beman::sendosio::ex::__sexpr_impl<beman::sendosio::read_t>
     : beman::sendosio::read_detail::read_impl {};
 
 #endif

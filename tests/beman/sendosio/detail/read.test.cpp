@@ -12,7 +12,7 @@
 namespace {
 
 namespace sendosio = beman::sendosio;
-namespace ex       = STDEXEC;
+namespace ex       = sendosio::ex;
 
 struct strstream {
     std::string data;

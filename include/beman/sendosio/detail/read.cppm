@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-module;
-
-#include <stdexec/execution.hpp>
 
 export module beman.sendosio:detail.read;
 
 import std;
 import :detail.concepts.read_stream;
+import :detail.vendor.execution;
 
 #define BEMAN_SENDOSIO_INCLUDED_FROM_INTERFACE_UNIT
 export {
