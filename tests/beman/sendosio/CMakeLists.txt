@@ -6,11 +6,13 @@ add_executable(beman.sendosio.tests.detail.buffers)
 target_sources(
     beman.sendosio.tests.detail.buffers
     PRIVATE
-        detail/buffers.test.cpp
         detail/buffer_algorithms.test.cpp
         detail/buffer_concepts.test.cpp
+        detail/buffers.test.cpp
         detail/buffers/buffer_slice.test.cpp
+        detail/buffers/consuming_buffers.test.cpp
         detail/buffers/make_buffer.test.cpp
+        detail/buffers/slice_of.test.cpp
 )
 target_link_libraries(
     beman.sendosio.tests.detail.buffers
