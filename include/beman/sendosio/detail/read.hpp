@@ -61,7 +61,7 @@ struct read_impl : ex::__sexpr_defaults {
 
 struct read_t {
     template <read_stream Stream, mutable_buffer_sequence Buffers>
-    auto operator()(Stream& stream, Buffers buffers) {
+    auto operator()(Stream& stream, Buffers buffers) const {
         return ex::__make_sexpr<read_t>(
             ex::__tuple{std::addressof(stream), std::move(buffers)});
     }
