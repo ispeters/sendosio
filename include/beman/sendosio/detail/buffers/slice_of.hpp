@@ -79,6 +79,8 @@ struct slice_of : std::ranges::view_interface<slice_of<Buffers> > {
                 ret += parent_->skip_front_;
             }
 
+            // TODO: if this check can be done with pos_ instead of index_, we could drop
+            //       index_ from this type and seq_length_ from the outer type
             if (index_ == (parent_->seq_length_ - 1)) {
                 // this is the last buffer in the sequence so we need to exclude from its
                 // end skip_back_ bytes
