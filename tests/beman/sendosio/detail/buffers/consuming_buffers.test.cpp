@@ -17,9 +17,8 @@
 namespace {
 
 // TODO: this file probably needs more test cases; for one thing, it would be a good idea
-//       to confirm that the results of `buffer_slice(buffers).data()` are independent
-//       views into `buffers`, and that, for example, removing a prefix from the slice
-//       doesn't affect any of the previously-returned views.
+//       to confirm that different instances of consuming_buffers constructed from the
+//       same buffer sequence are independent
 
 namespace sendosio = beman::sendosio;
 
@@ -32,7 +31,7 @@ template <std::invocable<sendosio::mutable_buffer, char*> Predicate>
     return pred(sendosio::mutable_buffer(ptr, sizeof(message)), ptr);
 }
 
-TEMPLATE_TEST_CASE("buffer_slice(...).remove_prefix(prefix) handles all contingencies",
+TEMPLATE_TEST_CASE("consuming_buffers(...).consume(prefix) handles all contingencies",
                    "[sendosio::consuming_buffers]",
                    sendosio::const_buffer,
                    sendosio::mutable_buffer) {
@@ -43,7 +42,7 @@ TEMPLATE_TEST_CASE("buffer_slice(...).remove_prefix(prefix) handles all continge
 
             auto slice = sendosio::consuming_buffers(buffer);
 
-            slice.remove_prefix(about_half);
+            slice.consume(about_half);
 
             auto data = slice.data();
 
@@ -55,7 +54,7 @@ TEMPLATE_TEST_CASE("buffer_slice(...).remove_prefix(prefix) handles all continge
             auto truncatedBuffer = sendosio::make_buffer(buffer, 2);
             auto slice           = sendosio::consuming_buffers(truncatedBuffer);
 
-            slice.remove_prefix(1);
+            slice.consume(1);
 
             auto data = slice.data();
 
@@ -69,7 +68,7 @@ TEMPLATE_TEST_CASE("buffer_slice(...).remove_prefix(prefix) handles all continge
             auto truncatedBuffer = sendosio::make_buffer(buffer, 2);
             auto slice           = sendosio::consuming_buffers(truncatedBuffer);
 
-            slice.remove_prefix(3);
+            slice.consume(3);
 
             auto data = slice.data();
 

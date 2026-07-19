@@ -40,7 +40,7 @@ class consuming_buffers {
 
     constexpr slice_of<iterator_type> data() const noexcept { return data_; }
 
-    constexpr void remove_prefix(std::size_t prefix) noexcept {
+    constexpr void consume(std::size_t prefix) noexcept {
         // update begin_, skip_front_, and seq_length_ to account for having removed
         // prefix bytes from the front of the buffer sequence
         data_.update_front(data(), prefix);
