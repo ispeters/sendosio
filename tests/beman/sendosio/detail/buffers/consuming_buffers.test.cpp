@@ -33,7 +33,7 @@ template <std::invocable<sendosio::mutable_buffer, char*> Predicate>
 }
 
 TEMPLATE_TEST_CASE("buffer_slice(...).remove_prefix(prefix) handles all contingencies",
-                   "[sendosio::buffer_slice]",
+                   "[sendosio::consuming_buffers]",
                    sendosio::const_buffer,
                    sendosio::mutable_buffer) {
 
@@ -41,8 +41,7 @@ TEMPLATE_TEST_CASE("buffer_slice(...).remove_prefix(prefix) handles all continge
         validate_predicate_over_nonempty_buffer([](const TestType buffer, auto) noexcept {
             const auto about_half = buffer.size() / 2;
 
-            auto slice =
-                sendosio::sliced(buffer, 0, (std::numeric_limits<std::size_t>::max)());
+            auto slice = sendosio::consuming_buffers(buffer);
 
             slice.remove_prefix(about_half);
 
@@ -53,7 +52,8 @@ TEMPLATE_TEST_CASE("buffer_slice(...).remove_prefix(prefix) handles all continge
 
     STATIC_REQUIRE(
         validate_predicate_over_nonempty_buffer([](const TestType buffer, auto) noexcept {
-            auto slice = sendosio::sliced(buffer, 0, 2);
+            auto truncatedBuffer = sendosio::make_buffer(buffer, 2);
+            auto slice           = sendosio::consuming_buffers(truncatedBuffer);
 
             slice.remove_prefix(1);
 
@@ -66,7 +66,8 @@ TEMPLATE_TEST_CASE("buffer_slice(...).remove_prefix(prefix) handles all continge
 
     STATIC_REQUIRE(
         validate_predicate_over_nonempty_buffer([](const TestType buffer, auto) noexcept {
-            auto slice = sendosio::sliced(buffer, 0, 2);
+            auto truncatedBuffer = sendosio::make_buffer(buffer, 2);
+            auto slice           = sendosio::consuming_buffers(truncatedBuffer);
 
             slice.remove_prefix(3);
 

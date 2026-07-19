@@ -211,7 +211,7 @@ struct data_view : std::ranges::view_interface<data_view<Iterator> > {
     }
 
     template <const_buffer_sequence Buffers>
-    friend struct sliced;
+    friend struct consuming_buffers;
 };
 
 } // namespace beman::sendosio

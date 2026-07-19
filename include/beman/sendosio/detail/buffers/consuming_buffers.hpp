@@ -21,14 +21,16 @@ import beman.sendosio;
 namespace beman::sendosio {
 
 template <const_buffer_sequence Buffers>
-struct sliced {
+class consuming_buffers {
     using iterator_type = decltype(sendosio::begin(std::declval<const Buffers&>()));
-    using buffer_type   = sendosio::buffer_type<Buffers>;
 
-    constexpr explicit sliced(const Buffers& seq,
-                              std::size_t    offset,
-                              std::size_t    length) noexcept
-        : data_(seq, offset, length) {}
+    data_view<iterator_type> data_;
+
+  public:
+    using buffer_type = sendosio::buffer_type<Buffers>;
+
+    constexpr explicit consuming_buffers(const Buffers& seq) noexcept
+        : data_(seq, 0, (std::numeric_limits<std::size_t>::max)()) {}
 
     constexpr data_view<iterator_type> data() const noexcept { return data_; }
 
@@ -37,13 +39,10 @@ struct sliced {
         // prefix bytes from the front of the buffer sequence
         data_.update_front(data(), prefix);
     }
-
-  private:
-    data_view<iterator_type> data_;
 };
 
 template <class Buffers>
-sliced(const Buffers&) -> sliced<Buffers>;
+consuming_buffers(const Buffers&) -> consuming_buffers<Buffers>;
 
 } // namespace beman::sendosio
 
