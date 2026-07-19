@@ -31,10 +31,10 @@ template <class Buffers>
 using slice_type = std::conditional_t<
     std::convertible_to<Buffers, const_buffer>,
     buffer_type<Buffers>,
-    data_view<decltype(sendosio::begin(std::declval<const Buffers&>()))> >;
+    slice_of<decltype(sendosio::begin(std::declval<const Buffers&>()))> >;
     #else
 template <class Buffers>
-using slice_type = data_view<decltype(sendosio::begin(std::declval<const Buffers&>()))>;
+using slice_type = slice_of<decltype(sendosio::begin(std::declval<const Buffers&>()))>;
     #endif
 
 namespace buffer_slice_detail {
@@ -51,7 +51,7 @@ struct buffer_slice_t {
         } else {
     #endif
         using iterator_t = decltype(sendosio::begin(seq));
-        return data_view<iterator_t>(seq, offset, length);
+        return slice_of<iterator_t>(seq, offset, length);
     #if 0
         }
     #endif

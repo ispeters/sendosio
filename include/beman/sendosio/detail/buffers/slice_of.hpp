@@ -33,8 +33,8 @@ constexpr auto buffer_sizes(View buffers) noexcept {
 // heavily inspired by Claude Sonnet 5
 // https://claude.ai/share/cb3523ee-45b9-4984-b6af-2c0da373206a
 template <std::bidirectional_iterator Iterator>
-struct data_view : std::ranges::view_interface<data_view<Iterator> > {
-    constexpr data_view() noexcept = default;
+struct slice_of : std::ranges::view_interface<slice_of<Iterator> > {
+    constexpr slice_of() noexcept = default;
 
     struct const_iterator {
         using value_type        = std::iter_value_t<Iterator>;
@@ -43,9 +43,9 @@ struct data_view : std::ranges::view_interface<data_view<Iterator> > {
 
         constexpr const_iterator() noexcept = default;
 
-        constexpr const_iterator(const data_view* parent,
-                                 Iterator         pos,
-                                 difference_type  index) noexcept
+        constexpr const_iterator(const slice_of* parent,
+                                 Iterator        pos,
+                                 difference_type index) noexcept
             : parent_(parent), pos_(pos), index_(index) {}
 
         constexpr value_type operator*() const noexcept {
@@ -91,9 +91,9 @@ struct data_view : std::ranges::view_interface<data_view<Iterator> > {
         }
 
       private:
-        const data_view* parent_{};
-        Iterator         pos_{};
-        difference_type  index_{0};
+        const slice_of* parent_{};
+        Iterator        pos_{};
+        difference_type index_{0};
 
         constexpr friend bool operator==(const const_iterator& lhs,
                                          const const_iterator& rhs) noexcept {
@@ -120,9 +120,7 @@ struct data_view : std::ranges::view_interface<data_view<Iterator> > {
 
   public:
     template <class Buffer>
-    constexpr data_view(const Buffer& seq,
-                        std::size_t   offset,
-                        std::size_t   length) noexcept
+    constexpr slice_of(const Buffer& seq, std::size_t offset, std::size_t length) noexcept
         : begin_(sendosio::begin(seq)), end_(begin_) {
         // no point doing a bunch of work in update_front only to leave the range empty
         // anyway

@@ -24,7 +24,7 @@ template <const_buffer_sequence Buffers>
 class consuming_buffers {
     using iterator_type = decltype(sendosio::begin(std::declval<const Buffers&>()));
 
-    data_view<iterator_type> data_;
+    slice_of<iterator_type> data_;
 
   public:
     using buffer_type = sendosio::buffer_type<Buffers>;
@@ -38,7 +38,7 @@ class consuming_buffers {
     // pretty sure there's a concept in std::ranges that lets me do that
     constexpr explicit consuming_buffers(const Buffers&&) noexcept = delete;
 
-    constexpr data_view<iterator_type> data() const noexcept { return data_; }
+    constexpr slice_of<iterator_type> data() const noexcept { return data_; }
 
     constexpr void remove_prefix(std::size_t prefix) noexcept {
         // update begin_, skip_front_, and seq_length_ to account for having removed
