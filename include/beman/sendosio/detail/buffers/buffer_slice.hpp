@@ -34,7 +34,7 @@ using slice_type = std::conditional_t<
     slice_of<decltype(sendosio::begin(std::declval<const Buffers&>()))> >;
     #else
 template <class Buffers>
-using slice_type = slice_of<decltype(sendosio::begin(std::declval<const Buffers&>()))>;
+using slice_type = slice_of<Buffers>;
     #endif
 
 namespace buffer_slice_detail {
@@ -50,8 +50,7 @@ struct buffer_slice_t {
             return make_buffer(make_buffer(seq) + offset, length);
         } else {
     #endif
-        using iterator_t = decltype(sendosio::begin(seq));
-        return slice_of<iterator_t>(seq, offset, length);
+        return slice_of<Buffers>(seq, offset, length);
     #if 0
         }
     #endif

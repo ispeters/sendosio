@@ -32,19 +32,41 @@ constexpr auto buffer_sizes(View buffers) noexcept {
 
 // heavily inspired by Claude Sonnet 5
 // https://claude.ai/share/cb3523ee-45b9-4984-b6af-2c0da373206a
-template <std::bidirectional_iterator Iterator>
-struct slice_of : std::ranges::view_interface<slice_of<Iterator> > {
+template <const_buffer_sequence Buffers>
+struct slice_of : std::ranges::view_interface<slice_of<Buffers> > {
+    using buffer_type = sendosio::buffer_type<Buffers>;
+
+    using iterator_type = decltype(sendosio::begin(std::declval<const Buffers&>()));
+
     constexpr slice_of() noexcept = default;
 
+    constexpr slice_of(
+        const Buffers& seq,
+        std::size_t    offset,
+        std::size_t    length = (std::numeric_limits<std::size_t>::max)()) noexcept
+        : begin_(sendosio::begin(seq)), end_(begin_) {
+        // no point doing a bunch of work in update_front only to leave the range empty
+        // anyway
+        if (length > 0) {
+            // this initializes begin_ and skip_front_, and drives seq_length_ to a
+            // meaningless negative value
+            initialize_front(sendosio::begin(seq), sendosio::end(seq), offset);
+
+            // this depends on begin_ and skip_front_ being initialized, above; it updates
+            // end_, skip_back_, and seq_length_ to the correct values
+            initialize_back(sendosio::end(seq), length);
+        }
+    }
+
     struct const_iterator {
-        using value_type        = std::iter_value_t<Iterator>;
-        using difference_type   = std::iter_difference_t<Iterator>;
+        using value_type        = std::iter_value_t<iterator_type>;
+        using difference_type   = std::iter_difference_t<iterator_type>;
         using interator_concept = std::bidirectional_iterator_tag;
 
         constexpr const_iterator() noexcept = default;
 
         constexpr const_iterator(const slice_of* parent,
-                                 Iterator        pos,
+                                 iterator_type   pos,
                                  difference_type index) noexcept
             : parent_(parent), pos_(pos), index_(index) {}
 
@@ -92,7 +114,7 @@ struct slice_of : std::ranges::view_interface<slice_of<Iterator> > {
 
       private:
         const slice_of* parent_{};
-        Iterator        pos_{};
+        iterator_type   pos_{};
         difference_type index_{0};
 
         constexpr friend bool operator==(const const_iterator& lhs,
@@ -105,38 +127,20 @@ struct slice_of : std::ranges::view_interface<slice_of<Iterator> > {
 
     constexpr const_iterator end() const noexcept { return {this, end_, seq_length_}; }
 
-    constexpr std::iter_difference_t<Iterator> size() const noexcept {
+    constexpr std::iter_difference_t<iterator_type> size() const noexcept {
         return seq_length_;
     }
 
   private:
-    Iterator begin_{};
-    Iterator end_{};
+    iterator_type begin_{};
+    iterator_type end_{};
     // invariant:
     //    skip_front_ == 0 || (begin_ != end_ && skip_front_ < begin_->size())
-    std::size_t                      skip_front_{};
-    std::size_t                      skip_back_{};
-    std::iter_difference_t<Iterator> seq_length_{};
+    std::size_t                           skip_front_{};
+    std::size_t                           skip_back_{};
+    std::iter_difference_t<iterator_type> seq_length_{};
 
-  public:
-    template <class Buffer>
-    constexpr slice_of(const Buffer& seq, std::size_t offset, std::size_t length) noexcept
-        : begin_(sendosio::begin(seq)), end_(begin_) {
-        // no point doing a bunch of work in update_front only to leave the range empty
-        // anyway
-        if (length > 0) {
-            // this initializes begin_ and skip_front_, and drives seq_length_ to a
-            // meaningless negative value
-            initialize_front(sendosio::begin(seq), sendosio::end(seq), offset);
-
-            // this depends on begin_ and skip_front_ being initialized, above; it updates
-            // end_, skip_back_, and seq_length_ to the correct values
-            initialize_back(sendosio::end(seq), length);
-        }
-    }
-
-  private:
-    template <std::sentinel_for<Iterator> Last>
+    template <std::sentinel_for<iterator_type> Last>
     constexpr auto buffer_size_partial_sums(Last last) const noexcept {
         return buffer_sizes(std::ranges::subrange(begin_, last)) |
                std::views::transform(
@@ -157,10 +161,10 @@ struct slice_of : std::ranges::view_interface<slice_of<Iterator> > {
                    });
     }
 
-    template <std::sentinel_for<Iterator> Last>
+    template <std::sentinel_for<iterator_type> Last>
     constexpr void initialize_back(Last last, std::size_t length) noexcept {
-        if constexpr (std::random_access_iterator<Iterator>) {
-            // if Iterator is random-access then this contract check is cheap
+        if constexpr (std::random_access_iterator<iterator_type>) {
+            // if iterator_type is random-access then this contract check is cheap
             BEMAN_SENDOSIO_CONTRACT_ASSERT(
                 // update_front may have advanced begin_ (leaving end_ alone); for each
                 // such advancement, it has decremented seq_length_
@@ -208,7 +212,7 @@ struct slice_of : std::ranges::view_interface<slice_of<Iterator> > {
         update_front(std::ranges::subrange(first, last), prefix);
     }
 
-    template <const_buffer_sequence Buffers>
+    template <const_buffer_sequence>
     friend struct consuming_buffers;
 };
 

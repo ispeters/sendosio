@@ -16,7 +16,6 @@ import beman.sendosio;
         #include <beman/sendosio/detail/buffers/slice_of.hpp>
 
         #include <cstddef>
-        #include <limits>
         #include <utility>
     #endif
 
@@ -26,13 +25,12 @@ template <const_buffer_sequence Buffers>
 class consuming_buffers {
     using iterator_type = decltype(sendosio::begin(std::declval<const Buffers&>()));
 
-    slice_of<iterator_type> data_;
+    slice_of<Buffers> data_;
 
   public:
     using buffer_type = sendosio::buffer_type<Buffers>;
 
-    constexpr explicit consuming_buffers(const Buffers& seq) noexcept
-        : data_(seq, 0, (std::numeric_limits<std::size_t>::max)()) {}
+    constexpr explicit consuming_buffers(const Buffers& seq) noexcept : data_(seq, 0) {}
 
     // this disables construction from rvalue buffer sequences, which prevents
     // constructing a view over a dangling reference; this is a useful safety feature but
@@ -40,7 +38,7 @@ class consuming_buffers {
     // pretty sure there's a concept in std::ranges that lets me do that
     constexpr explicit consuming_buffers(const Buffers&&) noexcept = delete;
 
-    constexpr slice_of<iterator_type> data() const noexcept { return data_; }
+    constexpr slice_of<Buffers> data() const noexcept { return data_; }
 
     constexpr void consume(std::size_t prefix) noexcept {
         // update begin_, skip_front_, and seq_length_ to account for having removed
