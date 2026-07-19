@@ -16,6 +16,8 @@ import beman.sendosio;
         #include <beman/sendosio/detail/buffers/slice_of.hpp>
 
         #include <cstddef>
+        #include <limits>
+        #include <utility>
     #endif
 
 namespace beman::sendosio {
