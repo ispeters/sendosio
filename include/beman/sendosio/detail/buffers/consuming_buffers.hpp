@@ -32,6 +32,12 @@ class consuming_buffers {
     constexpr explicit consuming_buffers(const Buffers& seq) noexcept
         : data_(seq, 0, (std::numeric_limits<std::size_t>::max)()) {}
 
+    // this disables construction from rvalue buffer sequences, which prevents
+    // constructing a view over a dangling reference; this is a useful safety feature but
+    // I think it's too strict--I'd like to support rvalue views that are "safe" and I'm
+    // pretty sure there's a concept in std::ranges that lets me do that
+    constexpr explicit consuming_buffers(const Buffers&&) noexcept = delete;
+
     constexpr data_view<iterator_type> data() const noexcept { return data_; }
 
     constexpr void remove_prefix(std::size_t prefix) noexcept {
