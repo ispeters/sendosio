@@ -26,16 +26,9 @@ import beman.sendosio;
 
 namespace beman::sendosio {
 
-    #if 0
-template <class Buffers>
-using slice_type = std::conditional_t<
-    std::convertible_to<Buffers, const_buffer>,
-    buffer_type<Buffers>,
-    slice_of<decltype(sendosio::begin(std::declval<const Buffers&>()))> >;
-    #else
+// this seems fairly redundant but it's more complicated in Capy
 template <class Buffers>
 using slice_type = slice_of<Buffers>;
-    #endif
 
 namespace buffer_slice_detail {
 
@@ -45,15 +38,7 @@ struct buffer_slice_t {
         const Buffers& seq,
         std::size_t    offset = 0,
         std::size_t length = (std::numeric_limits<std::size_t>::max)()) const noexcept {
-    #if 0
-        if constexpr (std::convertible_to<Buffers, const_buffer>) {
-            return make_buffer(make_buffer(seq) + offset, length);
-        } else {
-    #endif
-        return slice_of<Buffers>(seq, offset, length);
-    #if 0
-        }
-    #endif
+        return slice_type<Buffers>(seq, offset, length);
     }
 
     // Capy deletes this overload to avoid creating dangling slices; I think it might be
