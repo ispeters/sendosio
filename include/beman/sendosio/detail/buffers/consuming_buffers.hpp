@@ -22,12 +22,7 @@ import beman.sendosio;
 namespace beman::sendosio {
 
 template <const_buffer_sequence Buffers>
-class consuming_buffers {
-    using iterator_type = decltype(sendosio::begin(std::declval<const Buffers&>()));
-
-    slice_of<Buffers> data_;
-
-  public:
+struct consuming_buffers {
     using buffer_type = sendosio::buffer_type<Buffers>;
 
     constexpr explicit consuming_buffers(const Buffers& seq) noexcept : data_(seq, 0) {}
@@ -45,6 +40,9 @@ class consuming_buffers {
         // prefix bytes from the front of the buffer sequence
         data_.advance_front(prefix);
     }
+
+  private:
+    slice_of<Buffers> data_;
 };
 
 template <class Buffers>
