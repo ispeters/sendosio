@@ -192,7 +192,7 @@ struct slice_of : std::ranges::view_interface<slice_of<Buffers> > {
     }
 
     template <std::ranges::view View>
-    constexpr void update_front(View buffers, std::size_t prefix) noexcept {
+    constexpr void advance_front(View buffers, std::size_t prefix) noexcept {
         for (auto size : buffer_sizes(buffers)) {
             if (size > prefix) {
                 // we found the buffer we need to skip to; now adjust skip_front_ to skip
@@ -207,10 +207,54 @@ struct slice_of : std::ranges::view_interface<slice_of<Buffers> > {
         }
     }
 
+    constexpr void advance_front(std::size_t prefix) noexcept {
+        advance_front(*this, prefix);
+    }
+
     template <std::bidirectional_iterator First, std::sentinel_for<First> Last>
     constexpr void initialize_front(First first, Last last, std::size_t prefix) noexcept {
-        update_front(std::ranges::subrange(first, last), prefix);
+        advance_front(std::ranges::subrange(first, last), prefix);
     }
+
+    template <const_buffer_sequence>
+    friend struct consuming_buffers;
+};
+
+template <const_buffer_sequence Buffers>
+    requires std::convertible_to<Buffers, const_buffer>
+struct slice_of<Buffers> : std::ranges::view_interface<slice_of<Buffers> > {
+    using buffer_type = sendosio::buffer_type<Buffers>;
+
+    using iterator_type = decltype(sendosio::begin(std::declval<const Buffers&>()));
+
+    using const_iterator = iterator_type;
+
+    static_assert(std::contiguous_iterator<iterator_type>);
+
+    constexpr slice_of() noexcept = default;
+
+    constexpr slice_of(
+        buffer_type seq,
+        std::size_t offset,
+        std::size_t length = (std::numeric_limits<std::size_t>::max)()) noexcept
+        : buffer_(make_buffer(seq + offset, length)) {}
+
+    constexpr const_iterator begin() const noexcept {
+        // size() is either 0 or 1; when it's 0, we want begin() == end() and, otherwise,
+        // we want begin() + 1 == end(). This achieve both, hopefully without a branch.
+        return std::addressof(buffer_) + (1 - size());
+    }
+
+    constexpr const_iterator end() const noexcept { return std::addressof(buffer_) + 1; }
+
+    constexpr std::iter_difference_t<iterator_type> size() const noexcept {
+        return buffer_.size() > 0;
+    }
+
+  private:
+    buffer_type buffer_;
+
+    constexpr void advance_front(std::size_t prefix) noexcept { buffer_ += prefix; }
 
     template <const_buffer_sequence>
     friend struct consuming_buffers;

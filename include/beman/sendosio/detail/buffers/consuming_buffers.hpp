@@ -43,7 +43,7 @@ class consuming_buffers {
     constexpr void consume(std::size_t prefix) noexcept {
         // update begin_, skip_front_, and seq_length_ to account for having removed
         // prefix bytes from the front of the buffer sequence
-        data_.update_front(data(), prefix);
+        data_.advance_front(prefix);
     }
 };
 
