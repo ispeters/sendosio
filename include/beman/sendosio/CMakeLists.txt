@@ -9,8 +9,9 @@ if(BEMAN_SENDOSIO_USE_MODULES)
                     sendosio.cppm
                     detail/buffers.cppm
                     detail/buffers/buffer_slice.cppm
+                    detail/buffers/consuming_buffers.cppm
                     detail/buffers/make_buffer.cppm
-                    detail/concept/slice.cppm
+                    detail/buffers/slice_of.cppm
             FILE_SET HEADERS
                 FILES
                     config.hpp

@@ -13,8 +13,9 @@ import beman.sendosio;
 
     #include <beman/sendosio/detail/buffers.hpp>
     #include <beman/sendosio/detail/buffers/buffer_slice.hpp>
+    #include <beman/sendosio/detail/buffers/consuming_buffers.hpp>
     #include <beman/sendosio/detail/buffers/make_buffer.hpp>
-    #include <beman/sendosio/detail/concept/slice.hpp>
+    #include <beman/sendosio/detail/buffers/slice_of.hpp>
 
 #endif // BEMAN_SENDOSIO_USE_MODULES() &&
        // !defined(BEMAN_SENDOSIO_INCLUDED_FROM_INTERFACE_UNIT)
