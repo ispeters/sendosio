@@ -89,8 +89,8 @@ struct buffer_copy_t {
 
             // these calls to consume ought to empty dest, src, or both, advancing begin
             // on the corresponding data() view
-            dest_data.consume(bytes);
-            src_data.consume(bytes);
+            dest_consumer.consume(bytes);
+            src_consumer.consume(bytes);
             // make sure our return value gets updated correctly
             bytes_copied += bytes;
         }
