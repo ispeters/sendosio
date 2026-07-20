@@ -72,23 +72,22 @@ struct slice_of : std::ranges::view_interface<slice_of<Iterator, SingleBuffer> >
 
         constexpr const_iterator() noexcept = default;
 
-        constexpr const_iterator(const slice_of* parent,
-                                 iterator_type   pos,
-                                 difference_type index) noexcept
-            : parent_(parent), pos_(pos), index_(index) {}
+        constexpr const_iterator(const slice_of* parent, iterator_type pos) noexcept
+            : parent_(parent), pos_(pos) {}
 
         constexpr value_type operator*() const noexcept {
             value_type ret = *pos_;
 
-            if (index_ == 0) {
+            if (pos_ == parent_->begin_) {
                 // this is the first buffer in the sequence so we need to exclude from its
                 // beginning skip_front_ bytes
                 ret += parent_->skip_front_;
             }
 
-            // TODO: if this check can be done with pos_ instead of index_, we could drop
-            //       index_ from this type and seq_length_ from the outer type
-            if (index_ == (parent_->seq_length_ - 1)) {
+            // if pos_ is end_ then it's UB to dereference this iterator anyway
+            BEMAN_SENDOSIO_CONTRACT_ASSERT(pos_ != parent_->end_);
+
+            if (std::next(pos_) == parent_->end_) {
                 // this is the last buffer in the sequence so we need to exclude from its
                 // end skip_back_ bytes
                 ret = make_buffer(ret, ret.size() - parent_->skip_back_);
@@ -99,7 +98,6 @@ struct slice_of : std::ranges::view_interface<slice_of<Iterator, SingleBuffer> >
 
         constexpr const_iterator& operator++() noexcept {
             ++pos_;
-            ++index_;
             return *this;
         }
 
@@ -111,7 +109,6 @@ struct slice_of : std::ranges::view_interface<slice_of<Iterator, SingleBuffer> >
 
         constexpr const_iterator& operator--() noexcept {
             --pos_;
-            --index_;
             return *this;
         }
 
@@ -124,7 +121,6 @@ struct slice_of : std::ranges::view_interface<slice_of<Iterator, SingleBuffer> >
       private:
         const slice_of* parent_{};
         iterator_type   pos_{};
-        difference_type index_{0};
 
         constexpr friend bool operator==(const const_iterator& lhs,
                                          const const_iterator& rhs) noexcept {
@@ -132,22 +128,17 @@ struct slice_of : std::ranges::view_interface<slice_of<Iterator, SingleBuffer> >
         }
     };
 
-    constexpr const_iterator begin() const noexcept { return {this, begin_, 0}; }
+    constexpr const_iterator begin() const noexcept { return {this, begin_}; }
 
-    constexpr const_iterator end() const noexcept { return {this, end_, seq_length_}; }
-
-    constexpr std::iter_difference_t<iterator_type> size() const noexcept {
-        return seq_length_;
-    }
+    constexpr const_iterator end() const noexcept { return {this, end_}; }
 
   private:
     iterator_type begin_{};
     iterator_type end_{};
     // invariant:
     //    skip_front_ == 0 || (begin_ != end_ && skip_front_ < begin_->size())
-    std::size_t                           skip_front_{};
-    std::size_t                           skip_back_{};
-    std::iter_difference_t<iterator_type> seq_length_{};
+    std::size_t skip_front_{};
+    std::size_t skip_back_{};
 
     template <std::sentinel_for<iterator_type> Last>
     constexpr auto buffer_size_partial_sums(Last last) const noexcept {
@@ -172,24 +163,11 @@ struct slice_of : std::ranges::view_interface<slice_of<Iterator, SingleBuffer> >
 
     template <std::sentinel_for<iterator_type> Last>
     constexpr void initialize_back(Last last, std::size_t length) noexcept {
-        if constexpr (std::random_access_iterator<iterator_type>) {
-            // if iterator_type is random-access then this contract check is cheap
-            BEMAN_SENDOSIO_CONTRACT_ASSERT(
-                // update_front may have advanced begin_ (leaving end_ alone); for each
-                // such advancement, it has decremented seq_length_
-                end_ <= begin_ && seq_length_ == -std::ranges::distance(end_, begin_));
-        }
-
         // this is necessary because we're called after an invocation of update_front,
         // which has very likely changed begin_ from its initial value
         end_ = begin_;
-        // this is also necessary because update_front decrements seq_length_ if it
-        // advances begin_, so it may be negative
-        seq_length_ = 0;
-
         for (auto sum : buffer_size_partial_sums(last)) {
             ++end_;
-            ++seq_length_;
 
             if (sum >= length) {
                 // we found the earliest buffer containing enough cumulative bytes to
@@ -212,7 +190,6 @@ struct slice_of : std::ranges::view_interface<slice_of<Iterator, SingleBuffer> >
 
             prefix -= size;
             ++begin_;
-            --seq_length_;
         }
     }
 
@@ -246,19 +223,20 @@ struct slice_of<Iterator, true> : std::ranges::view_interface<slice_of<Iterator,
         : buffer_(make_buffer(seq + offset, length)) {}
 
     constexpr const_iterator begin() const noexcept {
-        // size() is either 0 or 1; when it's 0, we want begin() == end() and, otherwise,
-        // we want begin() + 1 == end(). This achieve both, hopefully without a branch.
-        return std::addressof(buffer_) + (1 - size());
+        // empty() is either 0 or 1; when it's 0, we want begin() + 1 == end() and,
+        // otherwise, we want begin() == end(). This achieve both, hopefully without a
+        // branch.
+        return std::addressof(buffer_) + empty();
     }
 
     constexpr const_iterator end() const noexcept { return std::addressof(buffer_) + 1; }
 
-    constexpr std::iter_difference_t<iterator_type> size() const noexcept {
-        return buffer_.size() > 0;
-    }
-
   private:
     buffer_type buffer_;
+
+    constexpr bool empty() const noexcept {
+        return buffer_.size() == 0;
+    }
 
     constexpr void advance_front(std::size_t prefix) noexcept { buffer_ += prefix; }
 
