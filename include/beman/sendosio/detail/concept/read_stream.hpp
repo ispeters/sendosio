@@ -17,12 +17,10 @@ import beman.sendosio;
         #include <beman/sendosio/detail/buffers.hpp>
         #include <beman/sendosio/detail/vendor/execution.hpp>
 
-        #include <concepts>
         #include <cstddef>
+        #include <exception>
         #include <memory_resource>
-        #include <ranges>
-        #include <string_view>
-        #include <type_traits>
+        #include <system_error>
     #endif
 
 namespace beman::sendosio {

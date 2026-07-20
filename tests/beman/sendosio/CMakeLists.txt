@@ -14,6 +14,7 @@ target_sources(
         detail/buffers/consuming_buffers.test.cpp
         detail/buffers/make_buffer.test.cpp
         detail/buffers/slice_of.test.cpp
+        detail/concept/read_stream.test.cpp
         detail/read.test.cpp
 )
 target_link_libraries(
