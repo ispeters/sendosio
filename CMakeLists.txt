@@ -25,6 +25,22 @@ option(
     ${PROJECT_IS_TOP_LEVEL}
 )
 
+# Keep a compile_commands.json symlink at the project root pointing at
+# whichever preset was most recently configured, so clangd (and other
+# tooling that expects the database at the source root) can find it
+# without per-preset configuration. Only do this for the top-level
+# build -- not when this project is pulled in as a dependency -- and
+# only when a compilation database is actually being generated.
+if(PROJECT_IS_TOP_LEVEL AND CMAKE_EXPORT_COMPILE_COMMANDS)
+    file(
+        CREATE_LINK
+            "${PROJECT_BINARY_DIR}/compile_commands.json"
+            "${PROJECT_SOURCE_DIR}/compile_commands.json"
+        SYMBOLIC
+        COPY_ON_ERROR
+    )
+endif()
+
 option(BEMAN_SENDOSIO_USE_MODULES "Provide beman.sendosio as a C++ module" OFF)
 
 if(BEMAN_SENDOSIO_USE_MODULES)
