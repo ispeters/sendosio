@@ -234,9 +234,7 @@ struct slice_of<Iterator, true> : std::ranges::view_interface<slice_of<Iterator,
   private:
     buffer_type buffer_;
 
-    constexpr bool empty() const noexcept {
-        return buffer_.size() == 0;
-    }
+    constexpr bool empty() const noexcept { return buffer_.size() == 0; }
 
     constexpr void advance_front(std::size_t prefix) noexcept { buffer_ += prefix; }
 
