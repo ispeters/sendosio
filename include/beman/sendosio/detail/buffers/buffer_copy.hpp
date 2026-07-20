@@ -16,6 +16,7 @@ import beman.sendosio;
         #include <beman/sendosio/detail/buffers/buffer_slice.hpp>
         #include <beman/sendosio/detail/buffers/consuming_buffers.hpp>
         #include <beman/sendosio/detail/buffers/slice_of.hpp>
+        #include <beman/sendosio/detail/contracts.hpp>
 
         #include <algorithm>
         #include <cstddef>

@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+module;
+
+#include <beman/sendosio/detail/contracts.hpp>
 
 export module beman.sendosio:detail.buffers.buffer_copy;
 
