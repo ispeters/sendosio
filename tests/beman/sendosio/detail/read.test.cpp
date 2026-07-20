@@ -5,7 +5,7 @@
 #include <catch2/catch_all.hpp>
 
 #include <beman/sendosio/detail/buffers/make_buffer.hpp>
-#include <stdexec/execution.hpp>
+#include <beman/sendosio/detail/vendor/execution.hpp>
 
 #include <array>
 
