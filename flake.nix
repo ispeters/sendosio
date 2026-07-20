@@ -4,7 +4,7 @@
   # (optionally) uses features of CMake 4.3, so pull in the staging-next
   # channel, which already has a CMake 4.3.4 package.
   inputs.nixpkgs-staging.url = "github:NixOS/nixpkgs/staging-next";
-  outputs = { self, nixpkgs, nixpkgs-staging }:
+  outputs = { nixpkgs, nixpkgs-staging, ... }:
     let
       system = "aarch64-darwin";
       pkgs = nixpkgs.legacyPackages.${system};
@@ -20,7 +20,7 @@
           stdenv = pkgs.llvmPackages_22.libcxxStdenv;
         } {
           packages = with pkgs; [
-            clang-tools
+            llvmPackages_22.clang-tools
             pkgs-staging.cmake
             gersemi
             lldb
