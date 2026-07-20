@@ -33,7 +33,7 @@ struct consuming_buffers {
     // pretty sure there's a concept in std::ranges that lets me do that
     constexpr explicit consuming_buffers(const Buffers&&) noexcept = delete;
 
-    constexpr slice_of<Buffers> data() const noexcept { return data_; }
+    constexpr slice_type<Buffers> data() const noexcept { return data_; }
 
     constexpr void consume(std::size_t prefix) noexcept {
         // update begin_, skip_front_, and seq_length_ to account for having removed
@@ -42,7 +42,7 @@ struct consuming_buffers {
     }
 
   private:
-    slice_of<Buffers> data_;
+    slice_type<Buffers> data_;
 };
 
 template <class Buffers>

@@ -25,6 +25,11 @@ import beman.sendosio;
 
 namespace beman::sendosio {
 
+template <const_buffer_sequence>
+struct consuming_buffers;
+
+namespace slice_of_detail {
+
 template <std::ranges::view View>
 constexpr auto buffer_sizes(View buffers) noexcept {
     return buffers | std::views::transform(std::ranges::size);
@@ -32,14 +37,16 @@ constexpr auto buffer_sizes(View buffers) noexcept {
 
 // heavily inspired by Claude Sonnet 5
 // https://claude.ai/share/cb3523ee-45b9-4984-b6af-2c0da373206a
-template <const_buffer_sequence Buffers>
-struct slice_of : std::ranges::view_interface<slice_of<Buffers> > {
-    using buffer_type = sendosio::buffer_type<Buffers>;
+template <std::bidirectional_iterator Iterator, bool SingleBuffer>
+struct slice_of : std::ranges::view_interface<slice_of<Iterator, SingleBuffer> > {
+    using iterator_type = Iterator;
 
-    using iterator_type = decltype(sendosio::begin(std::declval<const Buffers&>()));
+    using buffer_type = std::iter_value_t<iterator_type>;
 
     constexpr slice_of() noexcept = default;
 
+    template <const_buffer_sequence Buffers>
+        requires std::same_as<buffer_type, sendosio::buffer_type<Buffers> >
     constexpr slice_of(
         const Buffers& seq,
         std::size_t    offset,
@@ -219,19 +226,16 @@ struct slice_of : std::ranges::view_interface<slice_of<Buffers> > {
     }
 
     template <const_buffer_sequence>
-    friend struct consuming_buffers;
+    friend struct beman::sendosio::consuming_buffers;
 };
 
-template <const_buffer_sequence Buffers>
-    requires std::convertible_to<Buffers, const_buffer>
-struct slice_of<Buffers> : std::ranges::view_interface<slice_of<Buffers> > {
-    using buffer_type = sendosio::buffer_type<Buffers>;
+template <std::bidirectional_iterator Iterator>
+struct slice_of<Iterator, true> : std::ranges::view_interface<slice_of<Iterator, true> > {
+    using iterator_type = Iterator;
 
-    using iterator_type = decltype(sendosio::begin(std::declval<const Buffers&>()));
+    using buffer_type = std::iter_value_t<iterator_type>;
 
-    using const_iterator = iterator_type;
-
-    static_assert(std::contiguous_iterator<iterator_type>);
+    using const_iterator = const buffer_type*;
 
     constexpr slice_of() noexcept = default;
 
@@ -259,8 +263,15 @@ struct slice_of<Buffers> : std::ranges::view_interface<slice_of<Buffers> > {
     constexpr void advance_front(std::size_t prefix) noexcept { buffer_ += prefix; }
 
     template <const_buffer_sequence>
-    friend struct consuming_buffers;
+    friend struct beman::sendosio::consuming_buffers;
 };
+
+} // namespace slice_of_detail
+
+template <class Buffers>
+using slice_type =
+    slice_of_detail::slice_of<decltype(sendosio::begin(std::declval<const Buffers&>())),
+                              std::convertible_to<Buffers, const_buffer> >;
 
 } // namespace beman::sendosio
 
