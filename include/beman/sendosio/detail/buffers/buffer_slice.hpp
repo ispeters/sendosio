@@ -26,10 +26,6 @@ import beman.sendosio;
 
 namespace beman::sendosio {
 
-// this seems fairly redundant but it's more complicated in Capy
-template <class Buffers>
-using slice_type = slice_of<Buffers>;
-
 namespace buffer_slice_detail {
 
 struct buffer_slice_t {

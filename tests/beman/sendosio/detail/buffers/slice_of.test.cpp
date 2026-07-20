@@ -15,7 +15,7 @@ namespace sendosio = beman::sendosio;
 TEST_CASE("slice_of.hpp is self-contained", "[sendosio::slice_of]") {
     // this test file really only proves that slice_of.hpp is self-contained; the
     // behaviour of a slice_of<T> is validated in buffer_slice.test.cpp
-    STATIC_REQUIRE(std::ranges::view<sendosio::slice_of<sendosio::const_buffer>>);
+    STATIC_REQUIRE(std::ranges::view<sendosio::slice_type<sendosio::const_buffer>>);
 }
 
 } // namespace
