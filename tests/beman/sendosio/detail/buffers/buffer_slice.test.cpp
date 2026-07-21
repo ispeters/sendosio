@@ -224,4 +224,49 @@ TEMPLATE_TEST_CASE(
         }));
 }
 
+TEMPLATE_TEST_CASE("buffer_slice accepts slice_of<It, true> instances",
+                   "[sendosio::buffer_slice]",
+                   sendosio::const_buffer,
+                   sendosio::mutable_buffer) {
+    char     message[] = "hello, world!";
+    TestType buffer    = sendosio::make_buffer(message);
+
+    auto source_slice = sendosio::buffer_slice(buffer);
+
+    REQUIRE(*std::ranges::begin(source_slice) == buffer);
+
+    auto dest_slice = sendosio::buffer_slice(source_slice);
+
+    REQUIRE(*std::ranges::begin(dest_slice) == buffer);
+}
+
+TEMPLATE_TEST_CASE("buffer_slice accepts slice_of<It, false> instances",
+                   "[sendosio::buffer_slice]",
+                   sendosio::const_buffer,
+                   sendosio::mutable_buffer) {
+    char     message[] = "hello, world!";
+    TestType buffer    = sendosio::make_buffer(message);
+
+    auto reversed = std::views::reverse(sendosio::buffer_slice(buffer));
+
+    REQUIRE(*std::ranges::begin(reversed) == buffer);
+
+    auto source_slice = sendosio::buffer_slice(reversed);
+
+    using slice_t = decltype(source_slice);
+
+    STATIC_REQUIRE(
+        std::same_as<
+            slice_t,
+            sendosio::slice_of_detail::slice_of<typename slice_t::iterator_type, false>>);
+
+    REQUIRE(*std::ranges::begin(source_slice) == buffer);
+
+    auto dest_slice = sendosio::buffer_slice(source_slice);
+
+    STATIC_REQUIRE(std::same_as<slice_t, decltype(dest_slice)>);
+
+    REQUIRE(*std::ranges::begin(dest_slice) == buffer);
+}
+
 } // namespace
