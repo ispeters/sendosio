@@ -8,6 +8,7 @@ if(BEMAN_SENDOSIO_USE_MODULES)
                 FILES
                     sendosio.cppm
                     detail/buffers.cppm
+                    detail/buffers/buffer_copy.cppm
                     detail/buffers/buffer_slice.cppm
                     detail/buffers/consuming_buffers.cppm
                     detail/buffers/make_buffer.cppm
