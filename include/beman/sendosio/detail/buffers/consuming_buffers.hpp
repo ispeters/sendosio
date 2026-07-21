@@ -25,7 +25,7 @@ template <const_buffer_sequence Buffers>
 struct consuming_buffers {
     using buffer_type = sendosio::buffer_type<Buffers>;
 
-    constexpr explicit consuming_buffers(const Buffers& seq) noexcept : data_(seq, 0) {}
+    constexpr explicit consuming_buffers(const Buffers& seq) noexcept : data_(seq) {}
 
     // this disables construction from rvalue buffer sequences, which prevents
     // constructing a view over a dangling reference; this is a useful safety feature but
