@@ -52,6 +52,8 @@ struct buffer_copy_t {
                                slice_of<CB, SingleCB> sslice) const noexcept {
         // invariant: buffer_size(dslice) == buffer_size(sslice) and we're copying all the
         // bytes
+        BEMAN_SENDOSIO_CONTRACT_ASSERT(buffer_size(dslice) == buffer_size(sslice));
+
         std::size_t       bytes_copied = 0;
         consuming_buffers dest_consumer(dslice);
         consuming_buffers src_consumer(sslice);
@@ -74,6 +76,8 @@ struct buffer_copy_t {
                 return bytes_copied;
             }
 
+            BEMAN_SENDOSIO_CONTRACT_ASSERT(!std::ranges::empty(dest_data));
+
             const mutable_buffer dest = *std::ranges::begin(dest_data);
             const const_buffer   src  = *std::ranges::begin(src_data);
 
@@ -91,6 +95,7 @@ struct buffer_copy_t {
             // on the corresponding data() view
             dest_consumer.consume(bytes);
             src_consumer.consume(bytes);
+
             // make sure our return value gets updated correctly
             bytes_copied += bytes;
         }

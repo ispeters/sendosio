@@ -222,6 +222,12 @@ struct slice_of<Iterator, true> : std::ranges::view_interface<slice_of<Iterator,
         std::size_t length = (std::numeric_limits<std::size_t>::max)()) noexcept
         : buffer_(make_buffer(seq + offset, length)) {}
 
+    constexpr slice_of(
+        slice_of    seq,
+        std::size_t offset,
+        std::size_t length = (std::numeric_limits<std::size_t>::max)()) noexcept
+        : buffer_(make_buffer(seq.buffer_ + offset, length)) {}
+
     constexpr const_iterator begin() const noexcept {
         // empty() is either 0 or 1; when it's 0, we want begin() + 1 == end() and,
         // otherwise, we want begin() == end(). This achieve both, hopefully without a
@@ -242,12 +248,26 @@ struct slice_of<Iterator, true> : std::ranges::view_interface<slice_of<Iterator,
     friend struct beman::sendosio::consuming_buffers;
 };
 
+template <const_buffer_sequence Buffers>
+struct slice_type {
+    using type =
+        slice_of<decltype(sendosio::begin(std::declval<const Buffers&>())), false>;
+};
+
+template <std::convertible_to<const_buffer> Buffers>
+struct slice_type<Buffers> {
+    using type = slice_of<const Buffers*, true>;
+};
+
+template <class Iterator>
+struct slice_type<slice_of<Iterator, true> > {
+    using type = slice_of<Iterator, true>;
+};
+
 } // namespace slice_of_detail
 
 template <class Buffers>
-using slice_type =
-    slice_of_detail::slice_of<decltype(sendosio::begin(std::declval<const Buffers&>())),
-                              std::convertible_to<Buffers, const_buffer> >;
+using slice_type = slice_of_detail::slice_type<Buffers>::type;
 
 } // namespace beman::sendosio
 
