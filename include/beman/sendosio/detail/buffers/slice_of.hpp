@@ -57,13 +57,23 @@ struct slice_of : std::ranges::view_interface<slice_of<Iterator, SingleBuffer> >
         // no point doing a bunch of work in update_front only to leave the range empty
         // anyway
         if (length > 0) {
-            // this initializes begin_ and skip_front_, and drives seq_length_ to a
-            // meaningless negative value
+            // this initializes begin_ and skip_front_
             initialize_front(sendosio::begin(seq), sendosio::end(seq), offset);
 
             // this depends on begin_ and skip_front_ being initialized, above; it updates
-            // end_, skip_back_, and seq_length_ to the correct values
+            // end_, and skip_back_
             initialize_back(sendosio::end(seq), length);
+        }
+    }
+
+    explicit constexpr slice_of(
+        slice_of    seq,
+        std::size_t offset,
+        std::size_t length = (std::numeric_limits<std::size_t>::max)()) noexcept
+        : begin_(seq.begin_), end_(begin_) {
+        if (length > 0) {
+            initialize_front(seq.begin_, seq.end_, offset);
+            initialize_back(seq.end_, length);
         }
     }
 
@@ -229,6 +239,12 @@ struct slice_of<Iterator, true> : std::ranges::view_interface<slice_of<Iterator,
         std::size_t offset = 0,
         std::size_t length = (std::numeric_limits<std::size_t>::max)()) noexcept
         : buffer_(make_buffer(seq + offset, length)) {}
+
+    explicit constexpr slice_of(
+        slice_of    seq,
+        std::size_t offset,
+        std::size_t length = (std::numeric_limits<std::size_t>::max)()) noexcept
+        : slice_of(seq.buffer_, offset, length) {}
 
     constexpr const_iterator begin() const noexcept {
         // empty() is either 0 or 1; when it's 0, we want begin() + 1 == end() and,
