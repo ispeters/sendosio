@@ -66,7 +66,7 @@ struct read_source {
         pos_ = 0;
     }
 
-    const std::size_t available() noexcept { return data_.size() - pos_; }
+    std::size_t available() noexcept { return data_.size() - pos_; }
 
     template <sendosio::mutable_buffer_sequence Buffers>
     ex::sender auto read_some(Buffers buffers) {
@@ -93,7 +93,6 @@ struct read_source {
     std::string data_;
     std::size_t pos_ = 0;
     std::size_t max_read_size_;
-    bool        read{};
 };
 
 TEST_CASE("read returns a sender", "[sendosio::read]") {
