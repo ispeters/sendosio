@@ -60,6 +60,23 @@ TEST_CASE("buffer_copy can handle copying into a range of one-byte buffers",
     REQUIRE(std::string_view(dest.data(), dest.size()) == source);
 }
 
+TEST_CASE("buffer_copy can handle copying from a range of one-byte buffers",
+          "[sendosio::buffer_copy]") {
+    constexpr char                       source[] = "hello, world!";
+    std::array<char, sizeof(source) - 1> dest{};
+
+    auto source_buffers = source | std::views::take(dest.size()) |
+                          std::views::transform([](const char& c) noexcept {
+                              return sendosio::const_buffer(&c, 1);
+                          });
+    auto dest_buffers   = sendosio::make_buffer(dest);
+
+    const auto bytes = sendosio::buffer_copy(dest_buffers, source_buffers);
+
+    REQUIRE(bytes == dest.size());
+    REQUIRE(std::string_view(dest.data(), dest.size()) == source);
+}
+
 TEST_CASE("buffer_copy can handle the Cartesian product of possible two-part weak "
           "compositions of the source and destination storage",
           "[sendosio::buffer_copy]") {
