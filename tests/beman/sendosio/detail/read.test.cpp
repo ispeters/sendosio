@@ -5,6 +5,7 @@
 #include <catch2/catch_all.hpp>
 
 #include <beman/sendosio/detail/buffers.hpp>
+#include <beman/sendosio/detail/buffers/buffer_copy.hpp>
 #include <beman/sendosio/detail/buffers/make_buffer.hpp>
 #include <beman/sendosio/detail/vendor/execution.hpp>
 
@@ -79,11 +80,10 @@ struct read_source {
                        return ex::just(make_error_code(io_errc::eof), std::size_t());
                    }
 
-                   std::size_t avail =
-                       (std::min)(max_read_size_, data_.size() - pos_);
-                   auto src = sendosio::make_buffer(data_.data() + pos_, avail);
+                   std::size_t avail = (std::min)(max_read_size_, data_.size() - pos_);
+                   auto        src   = sendosio::make_buffer(data_.data() + pos_, avail);
 
-                   const auto n = sendosio::buffer_copy(buffers_, src);
+                   const auto n = sendosio::buffer_copy(buffers, src);
                    pos_ += n;
                    return ex::just(std::error_code(), n);
                });
