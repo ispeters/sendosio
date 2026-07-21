@@ -85,6 +85,8 @@ struct buffer_copy_t {
             // size, but they may be composed of buffers of arbitrary size so each copy
             // must ensure it doesn't overrun the end of a buffer
             const auto bytes = (std::min)(dest.size(), src.size());
+            // TODO: this call to memcpy is, I think, the only reason this function isn't
+            //       constexpr; it'd be neat if that could be changed
             std::memcpy(dest.data(), src.data(), bytes);
 
             // this is the forward-progress guarantee; if we ever have bytes == 0 then
