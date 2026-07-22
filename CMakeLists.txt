@@ -63,10 +63,20 @@ configure_file(
 include(infra/cmake/beman-install-library.cmake)
 include(infra/cmake/BuildTelemetryConfig.cmake)
 
+find_package(stdexec REQUIRED)
+
 if(BEMAN_SENDOSIO_USE_MODULES)
     add_library(beman.sendosio STATIC)
+    target_link_libraries(
+        beman.sendosio
+        PRIVATE $<BUILD_INTERFACE:STDEXEC::stdexec>
+    )
 else()
     add_library(beman.sendosio INTERFACE)
+    target_link_libraries(
+        beman.sendosio
+        INTERFACE $<BUILD_INTERFACE:STDEXEC::stdexec>
+    )
 endif()
 add_library(beman::sendosio ALIAS beman.sendosio)
 
