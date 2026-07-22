@@ -1,8 +1,22 @@
+module;
+
+#include <cassert>
+
 export module beman.sendosio;
 
-export import :detail.buffers.buffer_copy;
-export import :detail.buffers.buffer_slice;
-export import :detail.buffers.consuming_buffers;
-export import :detail.buffers.make_buffer;
-export import :detail.buffers.slice_of;
-export import :detail.buffers;
+import std;
+
+#define BEMAN_SENDOSIO_INCLUDED_FROM_INTERFACE_UNIT
+export {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winclude-angled-in-module-purview"
+#include <beman/sendosio/detail/buffers.hpp>
+#include <beman/sendosio/detail/buffers/buffer_copy.hpp>
+#include <beman/sendosio/detail/buffers/buffer_slice.hpp>
+#include <beman/sendosio/detail/buffers/consuming_buffers.hpp>
+#include <beman/sendosio/detail/buffers/make_buffer.hpp>
+#include <beman/sendosio/detail/buffers/slice_of.hpp>
+#include <beman/sendosio/detail/contracts.hpp>
+#include <beman/sendosio/sendosio.hpp>
+#pragma clang diagnostic pop
+}

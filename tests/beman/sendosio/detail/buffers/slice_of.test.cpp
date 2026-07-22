@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "beman/sendosio/detail/buffers/slice_of.hpp"
+#include <beman/sendosio/config.hpp>
 
 #include <catch2/catch_all.hpp>
 
 #include <beman/sendosio/detail/buffers.hpp>
+#include <beman/sendosio/detail/buffers/slice_of.hpp>
 
-#include <ranges>
+#if BEMAN_SENDOSIO_USE_MODULES()
+import std;
+#else
+    #include <ranges>
+#endif
 
 namespace {
 
