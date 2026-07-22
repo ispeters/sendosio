@@ -63,7 +63,8 @@ configure_file(
 include(infra/cmake/beman-install-library.cmake)
 include(infra/cmake/BuildTelemetryConfig.cmake)
 
-find_package(stdexec REQUIRED)
+add_subdirectory(stdexec)
+# find_package(stdexec REQUIRED)
 
 if(BEMAN_SENDOSIO_USE_MODULES)
     add_library(beman.sendosio STATIC)
