@@ -5,6 +5,9 @@ export module beman.sendosio:detail.read;
 import std;
 import :detail.concepts.read_stream;
 import :detail.vendor.execution;
+import :detail.buffers.consuming_buffers;
+import :detail.buffers.slice_of;
+import :detail.buffers.buffer_slice;
 
 #define BEMAN_SENDOSIO_INCLUDED_FROM_INTERFACE_UNIT
 export {
