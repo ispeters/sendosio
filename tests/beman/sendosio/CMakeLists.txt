@@ -14,10 +14,12 @@ target_sources(
         detail/buffers/consuming_buffers.test.cpp
         detail/buffers/make_buffer.test.cpp
         detail/buffers/slice_of.test.cpp
+        detail/concept/read_stream.test.cpp
+        detail/read.test.cpp
 )
 target_link_libraries(
     beman.sendosio.tests.detail.buffers
-    PRIVATE beman::sendosio Catch2::Catch2WithMain
+    PRIVATE beman::sendosio Catch2::Catch2WithMain STDEXEC::stdexec
 )
 if(BEMAN_SENDOSIO_USE_MODULES)
     set_target_properties(
