@@ -11,9 +11,9 @@ import beman.sendosio;
 
 #else
 
-    #if !BEMAN_SENDOSIO_USE_MODULES()
-        #include <beman/sendosio/detail/buffers.hpp>
+    #include <beman/sendosio/detail/buffers.hpp>
 
+    #if !BEMAN_SENDOSIO_USE_MODULES()
         #include <concepts>
         #include <cstddef>
         #include <ranges>

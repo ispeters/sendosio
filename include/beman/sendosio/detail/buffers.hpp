@@ -11,9 +11,9 @@ import beman.sendosio;
 
 #else
 
-    #if !BEMAN_SENDOSIO_USE_MODULES()
-        #include <beman/sendosio/detail/contracts.hpp>
+    #include <beman/sendosio/detail/contracts.hpp>
 
+    #if !BEMAN_SENDOSIO_USE_MODULES()
         #include <algorithm>
         #include <concepts>
         #include <cstddef>
@@ -209,4 +209,4 @@ using buffer_type =
 #endif // BEMAN_SENDOSIO_USE_MODULES() &&
        // !defined(BEMAN_SENDOSIO_INCLUDED_FROM_INTERFACE_UNIT)
 
-#endif // BEMAN_SENDOSIO_TODO_HPP
+#endif // BEMAN_SENDOSIO_DETAIL_BUFFERS_HPP

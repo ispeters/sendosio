@@ -1,18 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "beman/sendosio/detail/buffers/buffer_copy.hpp"
+#include <beman/sendosio/config.hpp>
 
 #include <catch2/catch_all.hpp>
 
+#include <beman/sendosio/detail/buffers/buffer_copy.hpp>
 #include <beman/sendosio/detail/buffers/make_buffer.hpp>
 
-#include <array>
-#include <ranges>
-#include <string_view>
+#if BEMAN_SENDOSIO_USE_MODULES()
+import std;
+#else
+    #include <array>
+    #include <ranges>
+    #include <string_view>
+#endif
 
 namespace {
 
-namespace sendosio = beman::sendosio;
+namespace sendosio = ::beman::sendosio;
 
 TEST_CASE("buffer_copy can copy one string to another", "[sendosio::buffer_copy]") {
     constexpr char                       source[] = "hello, world!";

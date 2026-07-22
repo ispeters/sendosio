@@ -19,7 +19,7 @@ target_link_libraries(
     beman.sendosio.tests.detail.buffers
     PRIVATE beman::sendosio Catch2::Catch2WithMain
 )
-if(BEMAN_EXEMPLAR_USE_MODULES)
+if(BEMAN_SENDOSIO_USE_MODULES)
     set_target_properties(
         beman.sendosio.tests.detail.buffers
         PROPERTIES CXX_MODULE_STD ON

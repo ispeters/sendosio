@@ -11,13 +11,13 @@ import beman.sendosio;
 
 #else
 
-    #if !BEMAN_SENDOSIO_USE_MODULES()
-        #include <beman/sendosio/detail/buffers.hpp>
-        #include <beman/sendosio/detail/buffers/buffer_slice.hpp>
-        #include <beman/sendosio/detail/buffers/consuming_buffers.hpp>
-        #include <beman/sendosio/detail/buffers/slice_of.hpp>
-        #include <beman/sendosio/detail/contracts.hpp>
+    #include <beman/sendosio/detail/buffers.hpp>
+    #include <beman/sendosio/detail/buffers/buffer_slice.hpp>
+    #include <beman/sendosio/detail/buffers/consuming_buffers.hpp>
+    #include <beman/sendosio/detail/buffers/slice_of.hpp>
+    #include <beman/sendosio/detail/contracts.hpp>
 
+    #if !BEMAN_SENDOSIO_USE_MODULES()
         #include <algorithm>
         #include <cstddef>
         #include <cstring>

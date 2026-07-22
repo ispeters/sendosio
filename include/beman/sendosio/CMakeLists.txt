@@ -4,20 +4,18 @@ if(BEMAN_SENDOSIO_USE_MODULES)
     target_sources(
         beman.sendosio
         PUBLIC
-            FILE_SET CXX_MODULES
-                FILES
-                    sendosio.cppm
-                    detail/buffers.cppm
-                    detail/buffers/buffer_copy.cppm
-                    detail/buffers/buffer_slice.cppm
-                    detail/buffers/consuming_buffers.cppm
-                    detail/buffers/make_buffer.cppm
-                    detail/buffers/slice_of.cppm
+            FILE_SET CXX_MODULES FILES sendosio.cppm
             FILE_SET HEADERS
                 FILES
+                    detail/buffers/buffer_copy.hpp
+                    detail/buffers/buffer_slice.hpp
+                    detail/buffers/consuming_buffers.hpp
+                    detail/buffers/make_buffer.hpp
+                    detail/buffers/slice_of.hpp
+                    detail/buffers.hpp
+                    detail/contracts.hpp
                     config.hpp
                     sendosio.hpp
-                    todo.hpp
                     "${PROJECT_BINARY_DIR}/include/beman/sendosio/config_generated.hpp"
     )
 else()
@@ -26,9 +24,15 @@ else()
         PUBLIC
             FILE_SET HEADERS
                 FILES
+                    detail/buffers/buffer_copy.hpp
+                    detail/buffers/buffer_slice.hpp
+                    detail/buffers/consuming_buffers.hpp
+                    detail/buffers/make_buffer.hpp
+                    detail/buffers/slice_of.hpp
+                    detail/buffers.hpp
+                    detail/contracts.hpp
                     config.hpp
                     sendosio.hpp
-                    todo.hpp
                     "${PROJECT_BINARY_DIR}/include/beman/sendosio/config_generated.hpp"
     )
 endif()
