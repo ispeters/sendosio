@@ -10,8 +10,8 @@ import beman.sendosio;
 
 #else
 
-// In module builds, these includes live in sendosio.cppm, but this header is still needed
-// for the `ex`/`exec` aliases it exports.
+    // In module builds, these includes live in sendosio.cppm, but this header is still
+    // needed for the `ex`/`exec` aliases it exports.
     #if !BEMAN_SENDOSIO_USE_MODULES()
 
         #include <exec/get_frame_allocator.hpp>

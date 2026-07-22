@@ -3,12 +3,13 @@
 #include <beman/sendosio/config.hpp>
 
 #include <catch2/catch_all.hpp>
-#include <exec/get_frame_allocator.hpp>
-#include <stdexec/execution.hpp>
 
-#include <beman/sendosio/detail/concept/read_stream.hpp>
+#include <exec/get_frame_allocator.hpp>
+
 #include <beman/sendosio/detail/buffers.hpp>
+#include <beman/sendosio/detail/concept/read_stream.hpp>
 #include <beman/sendosio/detail/vendor/execution.hpp>
+#include <stdexec/execution.hpp>
 
 #include <exception>
 #include <system_error>
@@ -39,7 +40,7 @@ TEMPLATE_TEST_CASE(
 }
 
 TEMPLATE_TEST_CASE(
-    "a read_some that requires an environment query and then succeeds satisifies "
+    "a read_some that requires an environment query and then succeeds satisfies "
     "read_stream",
     "[sendosio::read_stream]",
     ex::get_start_scheduler_t,
