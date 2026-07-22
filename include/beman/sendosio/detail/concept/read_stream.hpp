@@ -11,11 +11,10 @@ import beman.sendosio;
 
 #else
 
-    #if !BEMAN_SENDOSIO_USE_MODULES()
-        #include <exec/get_frame_allocator.hpp>
+    #include <beman/sendosio/detail/buffers.hpp>
+    #include <beman/sendosio/detail/vendor/execution.hpp>
 
-        #include <beman/sendosio/detail/buffers.hpp>
-        #include <beman/sendosio/detail/vendor/execution.hpp>
+    #if !BEMAN_SENDOSIO_USE_MODULES()
 
         #include <cstddef>
         #include <exception>

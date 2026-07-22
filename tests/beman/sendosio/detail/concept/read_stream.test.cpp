@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "beman/sendosio/detail/concept/read_stream.hpp"
+#include <beman/sendosio/config.hpp>
 
 #include <catch2/catch_all.hpp>
+#include <exec/get_frame_allocator.hpp>
+#include <stdexec/execution.hpp>
 
+#include <beman/sendosio/detail/concept/read_stream.hpp>
 #include <beman/sendosio/detail/buffers.hpp>
 #include <beman/sendosio/detail/vendor/execution.hpp>
 

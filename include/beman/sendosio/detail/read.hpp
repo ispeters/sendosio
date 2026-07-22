@@ -11,12 +11,10 @@ import beman.sendosio;
 
 #else
 
-    #if !BEMAN_SENDOSIO_USE_MODULES()
-        #include <beman/sendosio/detail/buffers.hpp>
-        #include <beman/sendosio/detail/buffers/consuming_buffers.hpp>
-        #include <beman/sendosio/detail/concept/read_stream.hpp>
-        #include <beman/sendosio/detail/vendor/execution.hpp>
-    #endif
+    #include <beman/sendosio/detail/buffers.hpp>
+    #include <beman/sendosio/detail/buffers/consuming_buffers.hpp>
+    #include <beman/sendosio/detail/concept/read_stream.hpp>
+    #include <beman/sendosio/detail/vendor/execution.hpp>
 
 namespace beman::sendosio {
 namespace read_detail {
