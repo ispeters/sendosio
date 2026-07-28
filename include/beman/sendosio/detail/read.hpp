@@ -14,7 +14,10 @@ import beman.sendosio;
     #include <beman/sendosio/detail/buffers.hpp>
     #include <beman/sendosio/detail/buffers/consuming_buffers.hpp>
     #include <beman/sendosio/detail/concept/read_stream.hpp>
-    #include <beman/sendosio/detail/vendor/execution.hpp>
+
+    #if !BEMAN_SENDOSIO_USE_MODULES()
+        #include <stdexec/execution.hpp>
+    #endif
 
 namespace beman::sendosio {
 namespace read_detail {
@@ -26,7 +29,7 @@ struct op_state {
     // I think this does not actually need to be a real operation state because it's owned
     // by a basic_operation_state
     //
-    // using operation_state_concept = ex::operation_state_tag;
+    // using operation_state_concept = stdexec::operation_state_tag;
 
     op_state(Stream stream, Buffers&& buffers, Receiver rcvr)
         : stream_(stream),
@@ -51,7 +54,7 @@ struct op_state {
     Receiver                   rcvr_;
 
     struct loop_rcvr {
-        using receiver_concept = ex::receiver_tag;
+        using receiver_concept = stdexec::receiver_tag;
 
         void set_value(std::error_code ec, std::size_t n) && noexcept {
             self->consuming_.consume(n);
@@ -61,7 +64,7 @@ struct op_state {
                 // there's an error and we've read less than everything so report the
                 // error
                 self->destroy_loop_op_and_invoke([ec](op_state* self) noexcept {
-                    ex::set_value(std::move(self->rcvr_), ec, self->total_read_);
+                    stdexec::set_value(std::move(self->rcvr_), ec, self->total_read_);
                 });
             } else {
                 // loop...
@@ -74,28 +77,31 @@ struct op_state {
             // maybe the semantic should be this->set_value(ec, 0)?
             // Capy doesn't actually support this error channel...
             self->destroy_loop_op_and_invoke([ec](op_state* self) noexcept {
-                ex::set_error(std::move(self->rcvr_), ec);
+                stdexec::set_error(std::move(self->rcvr_), ec);
             });
         }
 
         void set_error(std::exception_ptr e) && noexcept {
             self->destroy_loop_op_and_invoke([&e](op_state* self) noexcept {
-                ex::set_error(std::move(self->rcvr_), std::move(e));
+                stdexec::set_error(std::move(self->rcvr_), std::move(e));
             });
         }
 
         void set_stopped() && noexcept {
-            self->destroy_loop_op_and_invoke(
-                [](op_state* self) noexcept { ex::set_stopped(std::move(self->rcvr_)); });
+            self->destroy_loop_op_and_invoke([](op_state* self) noexcept {
+                stdexec::set_stopped(std::move(self->rcvr_));
+            });
         }
 
-        ex::env_of_t<Receiver> get_env() const noexcept { return self->rcvr_.get_env(); }
+        stdexec::env_of_t<Receiver> get_env() const noexcept {
+            return self->rcvr_.get_env();
+        }
 
         op_state* self;
     };
 
     using read_some_t = decltype(stream_->read_some(consuming_data_));
-    using loop_op_t   = ex::connect_result_t<read_some_t, loop_rcvr>;
+    using loop_op_t   = stdexec::connect_result_t<read_some_t, loop_rcvr>;
 
     union {
         loop_op_t loop_op_;
@@ -109,11 +115,11 @@ struct op_state {
 
             // TODO: consider whether we need a trampoline scheduler...
             auto* child = new ((void*)std::addressof(loop_op_)) loop_op_t(
-                ex::connect(stream_->read_some(consuming_data_), loop_rcvr{this}));
+                stdexec::connect(stream_->read_some(consuming_data_), loop_rcvr{this}));
 
             child->start();
         } else {
-            ex::set_value(std::move(rcvr_), std::error_code(), total_read_);
+            stdexec::set_value(std::move(rcvr_), std::error_code(), total_read_);
         }
     }
 
@@ -124,15 +130,16 @@ struct op_state {
     }
 };
 
-struct read_impl : ex::__sexpr_defaults {
+struct read_impl : stdexec::__sexpr_defaults {
     template <class Sender, class Env>
     static consteval auto __get_completion_signatures() noexcept {
         // TODO: this is maximal; with more work, I could report what my stream's
         //       read_some can return, which may be less
-        return ex::completion_signatures<ex::set_value_t(std::error_code, std::size_t),
-                                         ex::set_error_t(std::error_code),
-                                         ex::set_error_t(std::exception_ptr),
-                                         ex::set_stopped_t()>{};
+        return stdexec::completion_signatures<stdexec::set_value_t(std::error_code,
+                                                                   std::size_t),
+                                              stdexec::set_error_t(std::error_code),
+                                              stdexec::set_error_t(std::exception_ptr),
+                                              stdexec::set_stopped_t()>{};
     }
 
     static constexpr auto __get_state =
@@ -151,7 +158,8 @@ struct read_impl : ex::__sexpr_defaults {
 struct read_t {
     template <read_stream Stream, mutable_buffer_sequence Buffers>
     auto operator()(Stream& stream, Buffers buffers) const {
-        return ex::__make_sexpr<read_t>(ex::__tuple{std::addressof(stream), buffers});
+        return stdexec::__make_sexpr<read_t>(
+            stdexec::__tuple{std::addressof(stream), buffers});
     }
 };
 
@@ -164,7 +172,7 @@ inline constexpr read_t read{};
 } // namespace beman::sendosio
 
 template <>
-struct beman::sendosio::ex::__sexpr_impl<beman::sendosio::read_t>
+struct stdexec::__sexpr_impl<beman::sendosio::read_t>
     : beman::sendosio::read_detail::read_impl {};
 
 #endif

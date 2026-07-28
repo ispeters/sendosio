@@ -8,17 +8,19 @@
 
 #include <beman/sendosio/detail/buffers.hpp>
 #include <beman/sendosio/detail/concept/read_stream.hpp>
-#include <beman/sendosio/detail/vendor/execution.hpp>
 #include <stdexec/execution.hpp>
 
-#include <exception>
-#include <system_error>
+#if BEMAN_SENDOSIO_USE_MODULES()
+import std;
+#else
+    #include <exception>
+    #include <system_error>
+#endif
 
 namespace {
 
 namespace sendosio = beman::sendosio;
-namespace ex       = sendosio::ex;
-namespace exec     = sendosio::exec;
+namespace ex       = stdexec;
 
 TEMPLATE_TEST_CASE(
     "a read_some with that returns a fixed just sender satisfies read_stream",

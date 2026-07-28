@@ -1,10 +1,8 @@
 module;
 
-#include <exec/get_frame_allocator.hpp>
-
-#include <stdexec/execution.hpp>
-
 #include <cassert>
+import stdexec;
+#include <exec/get_frame_allocator.hpp>
 
 export module beman.sendosio;
 

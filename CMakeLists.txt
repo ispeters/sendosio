@@ -63,6 +63,12 @@ configure_file(
 include(infra/cmake/beman-install-library.cmake)
 include(infra/cmake/BuildTelemetryConfig.cmake)
 
+if(BEMAN_SENDOSIO_USE_MODULES)
+    set(STDEXEC_BUILD_MODULES ON)
+    # the stdexec examples don't build with a modularized stdexec, yet
+    set(STDEXEC_BUILD_EXAMPLES OFF)
+    set(STDEXEC_BUILD_TESTS OFF)
+endif()
 add_subdirectory(stdexec)
 # find_package(stdexec REQUIRED)
 

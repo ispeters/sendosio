@@ -10,19 +10,22 @@
 #include <beman/sendosio/detail/buffers/buffer_copy.hpp>
 #include <beman/sendosio/detail/buffers/make_buffer.hpp>
 #include <beman/sendosio/detail/read.hpp>
-#include <beman/sendosio/detail/vendor/execution.hpp>
 #include <stdexec/execution.hpp>
 
-#include <array>
-#include <ranges>
-#include <string>
-#include <string_view>
-#include <utility>
+#if BEMAN_SENDOSIO_USE_MODULES()
+import std;
+#else
+    #include <array>
+    #include <ranges>
+    #include <string>
+    #include <string_view>
+    #include <utility>
+#endif
 
 namespace {
 
 namespace sendosio = beman::sendosio;
-namespace ex       = sendosio::ex;
+namespace ex       = stdexec;
 
 enum class io_errc {
     eof = 1,

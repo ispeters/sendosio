@@ -12,9 +12,11 @@ import beman.sendosio;
 #else
 
     #include <beman/sendosio/detail/buffers.hpp>
-    #include <beman/sendosio/detail/vendor/execution.hpp>
 
     #if !BEMAN_SENDOSIO_USE_MODULES()
+        #include <exec/get_frame_allocator.hpp>
+
+        #include <stdexec/execution.hpp>
 
         #include <cstddef>
         #include <exception>
@@ -26,18 +28,16 @@ namespace beman::sendosio {
 
 namespace read_stream_detail {
 
-namespace ex = beman::sendosio::ex;
-
 struct io_env {
-    ex::inline_scheduler query(ex::get_start_scheduler_t) const noexcept;
+    stdexec::inline_scheduler query(stdexec::get_start_scheduler_t) const noexcept;
 
-    ex::inplace_stop_token query(ex::get_stop_token_t) const noexcept;
+    stdexec::inplace_stop_token query(stdexec::get_stop_token_t) const noexcept;
 
     std::pmr::polymorphic_allocator<> query(exec::get_frame_allocator_t) const noexcept;
 };
 
 struct io_result_receiver {
-    using receiver_concept = ex::receiver_tag;
+    using receiver_concept = stdexec::receiver_tag;
 
     // this mirrors Capy's
     //
@@ -75,7 +75,9 @@ struct io_result_receiver {
 // adding it, yet.
 template <class Stream>
 concept read_stream = requires(Stream& stream, mutable_buffer buffer) {
-    { stream.read_some(buffer) } -> ex::sender_to<read_stream_detail::io_result_receiver>;
+    {
+        stream.read_some(buffer)
+    } -> stdexec::sender_to<read_stream_detail::io_result_receiver>;
 };
 
 } // namespace beman::sendosio
