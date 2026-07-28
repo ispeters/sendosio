@@ -5,6 +5,10 @@
     {
       "name": "catch2",
       "host": true
+    },
+    {
+      "name": "stdexec",
+      "host": true
     }
   ]
 }

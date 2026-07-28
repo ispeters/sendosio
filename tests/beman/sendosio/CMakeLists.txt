@@ -3,21 +3,28 @@
 find_package(Catch2 3 REQUIRED)
 
 add_executable(beman.sendosio.tests.detail.buffers)
-target_sources(
-    beman.sendosio.tests.detail.buffers
-    PRIVATE
-        detail/buffer_algorithms.test.cpp
-        detail/buffer_concepts.test.cpp
-        detail/buffers.test.cpp
-        detail/buffers/buffer_copy.test.cpp
-        detail/buffers/buffer_slice.test.cpp
-        detail/buffers/consuming_buffers.test.cpp
-        detail/buffers/make_buffer.test.cpp
-        detail/buffers/slice_of.test.cpp
+
+set(test_sources
+    detail/buffer_algorithms.test.cpp
+    detail/buffer_concepts.test.cpp
+    detail/buffers.test.cpp
+    detail/buffers/buffer_copy.test.cpp
+    detail/buffers/buffer_slice.test.cpp
+    detail/buffers/consuming_buffers.test.cpp
+    detail/buffers/make_buffer.test.cpp
+    detail/buffers/slice_of.test.cpp
+    detail/concept/read_stream.test.cpp
 )
+
+if(NOT BEMAN_SENDOSIO_USE_MODULES)
+    # this doesn't build with a modularized stdexec, yet
+    list(APPEND test_sources detail/read.test.cpp)
+endif()
+
+target_sources(beman.sendosio.tests.detail.buffers PRIVATE ${test_sources})
 target_link_libraries(
     beman.sendosio.tests.detail.buffers
-    PRIVATE beman::sendosio Catch2::Catch2WithMain
+    PRIVATE beman::sendosio Catch2::Catch2WithMain STDEXEC::stdexec
 )
 if(BEMAN_SENDOSIO_USE_MODULES)
     set_target_properties(

@@ -1,6 +1,8 @@
 module;
 
 #include <cassert>
+import stdexec;
+#include <exec/get_frame_allocator.hpp>
 
 export module beman.sendosio;
 
@@ -16,7 +18,9 @@ export {
 #include <beman/sendosio/detail/buffers/consuming_buffers.hpp>
 #include <beman/sendosio/detail/buffers/make_buffer.hpp>
 #include <beman/sendosio/detail/buffers/slice_of.hpp>
+#include <beman/sendosio/detail/concept/read_stream.hpp>
 #include <beman/sendosio/detail/contracts.hpp>
+#include <beman/sendosio/detail/read.hpp>
 #include <beman/sendosio/sendosio.hpp>
 #pragma clang diagnostic pop
 }
