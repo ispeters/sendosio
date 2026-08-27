@@ -1,15 +1,32 @@
 {
   "nodes": {
+    "cladoscope": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1786818414,
+        "narHash": "sha256-LJXA0n5hCcx/7y/TRjAcrYgT+3YBb9pGenrzpqLxq84=",
+        "owner": "ispeters",
+        "repo": "cladoscope",
+        "rev": "f2849a1f56d81becb4366e0eec94fbd6a0c3a9c1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ispeters",
+        "repo": "cladoscope",
+        "type": "github"
+      }
+    },
     "devshells": {
       "inputs": {
+        "cladoscope": "cladoscope",
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1785028485,
-        "narHash": "sha256-G7bc4xAs3DqAfF/L79GnRmZhgoAPoPLsWvPCXEKtulE=",
+        "lastModified": 1787791805,
+        "narHash": "sha256-BwalIC7rxarq3xcb5pHH7ZZW4vcLkVne3wFjSFVYf98=",
         "owner": "ispeters",
         "repo": "devshells",
-        "rev": "ba0c58c6f512f130762f52d78dce9aa7f9f6cec2",
+        "rev": "9a08170f6ebd946de8b34284c49304a625a687b8",
         "type": "github"
       },
       "original": {
