@@ -19,9 +19,10 @@
     }:
     let
       system = "aarch64-darwin";
-      pkgs = nixpkgs.legacyPackages.${system};
-      # I adapted this line from some Claude Sonnet 5 output; I don't
-      # understand why this syntax is so different from the line above
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [ (import "${devshells}/lib/llvm23-overlay.nix") ];
+      };
       pkgs-staging = import nixpkgs-staging { inherit system; };
       # mkClangDevShell creates a devshell with things like clang 22,
       # clangd, etc., and it ensure the local Mac environment is
@@ -30,9 +31,11 @@
     in
     {
       devShells.${system} = {
-        # default development shell with Clang 22
+        # default development shell with Clang 23 (stdexec's modular build
+        # requires 23+, and this project depends on stdexec)
         # launch with `nix develop`
         default = mkClangDevShell {
+          clangVersion = 23;
           extraPackages = with pkgs; [
             pkgs-staging.cmake
             gersemi
